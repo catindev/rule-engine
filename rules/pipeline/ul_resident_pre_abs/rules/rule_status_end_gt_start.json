@@ -1,0 +1,11 @@
+{
+  "type": "rule",
+  "description": "Дата прекращения статуса > даты начала",
+  "role": "check",
+  "operator": "field_greater_than_field",
+  "value_field": "part.start",
+  "level": "ERROR",
+  "code": "ERR_STATUS_DATE_RANGE",
+  "message": "Дата прекращения статуса должна быть позже даты начала",
+  "field": "part.end"
+}

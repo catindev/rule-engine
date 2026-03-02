@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "Флаг обязателен: beneficiary.isUSPerson",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_FLAG_REQUIRED_3",
+  "message": "Не передан обязательный признак fatca.isUSPerson",
+  "field": "fatca.ustaxpayer"
+}

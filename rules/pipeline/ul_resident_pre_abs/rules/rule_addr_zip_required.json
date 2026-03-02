@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "Адрес: addr.zip заполнен",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_ADDR_ZIP_REQUIRED",
+  "message": "Индекс адреса должен быть заполнен",
+  "field": "addr.zip"
+}

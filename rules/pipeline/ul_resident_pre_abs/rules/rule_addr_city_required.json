@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "Адрес: addr.city заполнен",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_ADDR_CITY_REQUIRED",
+  "message": "Город адреса должен быть заполнен",
+  "field": "addr.city"
+}

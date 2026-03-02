@@ -1,0 +1,16 @@
+{
+  "type": "condition",
+  "description": "Если юрисдикция РФ проверить ОГРН",
+  "when": "pred_jurisdiction_is_ru",
+  "steps": [
+    {
+      "rule": "rule_ogrn_required"
+    },
+    {
+      "rule": "rule_ogrn_format"
+    },
+    {
+      "rule": "rule_ogrn_checksum"
+    }
+  ]
+}

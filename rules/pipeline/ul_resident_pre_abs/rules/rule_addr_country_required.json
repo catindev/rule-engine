@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "Адрес: addr.country заполнен",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_ADDR_COUNTRY_REQUIRED",
+  "message": "Страна адреса должна быть заполнена",
+  "field": "addr.country"
+}

@@ -1,0 +1,14 @@
+{
+  "type": "rule",
+  "description": "Заполнен хотя бы один контакт (телефон или email)",
+  "role": "check",
+  "operator": "any_filled",
+  "paths": [
+    "contacts.phone",
+    "contacts.email"
+  ],
+  "level": "ERROR",
+  "code": "ERR_CONTACTS_REQUIRED",
+  "message": "Необходимо заполнить хотя бы один контакт (телефон или email)",
+  "field": "contacts"
+}

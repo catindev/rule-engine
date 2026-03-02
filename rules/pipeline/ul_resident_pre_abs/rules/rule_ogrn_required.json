@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "ОГРН заполнен",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_OGRN_REQUIRED",
+  "message": "ОГРН должен быть заполнен",
+  "field": "beneficiary.ogrn"
+}

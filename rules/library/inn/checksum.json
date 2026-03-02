@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "ИНН: контрольный разряд",
+  "role": "check",
+  "operator": "valid_inn",
+  "level": "ERROR",
+  "code": "ERR_INN_CHECKSUM",
+  "message": "Некорректный контрольный разряд ИНН",
+  "field": "beneficiary.inn"
+}

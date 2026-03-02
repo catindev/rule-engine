@@ -1,0 +1,11 @@
+{
+  "type": "rule",
+  "description": "Если beneficiary.hasUSControllingPersons=Y маркер для upstream",
+  "role": "check",
+  "operator": "equals",
+  "value": false,
+  "level": "ERROR",
+  "code": "ERR_US_CTRL_PERSONS_Y",
+  "message": "Регистрация невозможна: контролирующие лица налогоплательщики США",
+  "field": "fatca.cpus"
+}

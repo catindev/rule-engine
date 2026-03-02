@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "Foreign address: faddr.house заполнен",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_FADDR_HOUSE_REQUIRED",
+  "message": "Не указан дом в иностранном адресе",
+  "field": "faddr.house"
+}

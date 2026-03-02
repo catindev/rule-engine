@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "Флаг обязателен: beneficiary.hasForeignControllingPersons",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_FLAG_REQUIRED_2",
+  "message": "Не передан обязательный признак fatca.hasForeignControllingPersons",
+  "field": "fatca.cpforeign"
+}

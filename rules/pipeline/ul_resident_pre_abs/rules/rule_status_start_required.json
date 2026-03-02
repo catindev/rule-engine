@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "Дата приобретения статуса заполнена",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_STATUS_START_REQUIRED",
+  "message": "Не указана дата приобретения статуса бенефициара",
+  "field": "part.start"
+}

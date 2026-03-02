@@ -1,0 +1,11 @@
+{
+  "type": "rule",
+  "description": "ОГРН: 13 цифр, не из нулей",
+  "role": "check",
+  "operator": "matches_regex",
+  "value": "^(?!0+$)\\\\d{13}$",
+  "level": "ERROR",
+  "code": "ERR_OGRN_FORMAT",
+  "message": "ОГРН должен состоять из 13 цифр и не быть из нулей",
+  "field": "beneficiary.ogrn"
+}

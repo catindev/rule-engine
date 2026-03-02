@@ -1,0 +1,14 @@
+{
+  "type": "rule",
+  "description": "Тип бенефициара допустим",
+  "role": "check",
+  "operator": "in_dictionary",
+  "dictionary": {
+    "type": "static",
+    "id": "dictionary_beneficiary_types"
+  },
+  "level": "EXCEPTION",
+  "code": "EXC_BENEFICIARY_TYPE_INVALID",
+  "message": "Недопустимый тип бенефициара",
+  "field": "beneficiary.type"
+}

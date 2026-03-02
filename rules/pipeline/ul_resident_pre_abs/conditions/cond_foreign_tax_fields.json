@@ -1,0 +1,25 @@
+{
+  "type": "condition",
+  "description": "Если иностранный налоговый резидент = Y обязательны поля 14-16",
+  "when": "pred_is_foreign_tax_yes",
+  "steps": [
+    {
+      "rule": "rule_tax_country_required"
+    },
+    {
+      "rule": "rule_tax_tin_required"
+    },
+    {
+      "rule": "rule_faddr_country_required"
+    },
+    {
+      "rule": "rule_faddr_city_required"
+    },
+    {
+      "rule": "rule_faddr_street_required"
+    },
+    {
+      "rule": "rule_faddr_house_required"
+    }
+  ]
+}

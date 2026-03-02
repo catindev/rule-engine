@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "ИНН заполнен",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_INN_REQUIRED",
+  "message": "ИНН должен быть заполнен",
+  "field": "beneficiary.inn"
+}

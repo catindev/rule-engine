@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "ОПФ заполнено",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_OPF_REQUIRED",
+  "message": "ОПФ должно быть заполнено",
+  "field": "org.form"
+}

@@ -1,0 +1,8 @@
+{
+  "type": "rule",
+  "description": "jurisdiction == RU",
+  "role": "predicate",
+  "operator": "equals",
+  "field": "addr.country",
+  "value": "RU"
+}

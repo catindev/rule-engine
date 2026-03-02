@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "TIN заполнен",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_TAX_TIN_REQUIRED",
+  "message": "Не указан ИИНН/аналог (TIN)",
+  "field": "tax.tin"
+}

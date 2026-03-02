@@ -1,0 +1,11 @@
+{
+  "type": "rule",
+  "description": "ИНН: 10 цифр, не из одинаковых цифр",
+  "role": "check",
+  "operator": "matches_regex",
+  "value": "^(?!([0-9])\\\\1{9}$)\\\\d{10}$",
+  "level": "ERROR",
+  "code": "ERR_INN_FORMAT",
+  "message": "ИНН должен состоять из 10 цифр и не быть из одинаковых цифр",
+  "field": "beneficiary.inn"
+}

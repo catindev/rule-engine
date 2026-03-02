@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "Флаг обязателен: beneficiary.hasUSControllingPersons",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_FLAG_REQUIRED_4",
+  "message": "Не передан обязательный признак fatca.hasUSControllingPersons",
+  "field": "fatca.cpus"
+}

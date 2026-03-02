@@ -1,0 +1,10 @@
+{
+  "name": "dsl-engine-prototype",
+  "version": "0.6.1",
+  "type": "commonjs",
+  "main": "index.js",
+  "license": "UNLICENSED",
+  "scripts": {
+    "demo": "node ./scripts/run-demo.js"
+  }
+}

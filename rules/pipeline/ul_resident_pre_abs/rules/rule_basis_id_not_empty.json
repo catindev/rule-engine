@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "Идентификатор основания участия (если передан) заполнен",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "WARNING",
+  "code": "WARN_BASIS_ID_EMPTY",
+  "message": "Идентификатор основания участия передан пустым",
+  "field": "part.basis"
+}

@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "Страна налогового резидентства заполнена",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_TAX_COUNTRY_REQUIRED",
+  "message": "Не указано государство/территория налогового резидентства",
+  "field": "tax.country"
+}

@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "Признак иностранного налогового резидентства передан",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_FOREIGN_TAX_FLAG_REQUIRED",
+  "message": "Не передан признак иностранного налогового резидентства",
+  "field": "tax.foreign"
+}

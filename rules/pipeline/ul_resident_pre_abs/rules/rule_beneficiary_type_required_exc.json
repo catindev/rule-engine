@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "Передан тип бенефициара (иначе нельзя выбрать набор проверок)",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "EXCEPTION",
+  "code": "EXC_BENEFICIARY_TYPE_REQUIRED",
+  "message": "Не передан тип бенефициара",
+  "field": "beneficiary.type"
+}

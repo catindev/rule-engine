@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "description": "Адрес: addr.house заполнен",
+  "role": "check",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_ADDR_HOUSE_REQUIRED",
+  "message": "Дом адреса должен быть заполнен",
+  "field": "addr.house"
+}

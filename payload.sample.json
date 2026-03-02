@@ -13,7 +13,7 @@
   "addr.zip": "398017",
   "contacts.phone": "+79508004156",
   "contacts.email": "ark48lipetsk@yandex.ru",
-  "tax.foreign": false,
+  "tax.foreign": true,
   "fatca.passive": false,
   "fatca.cpforeign": false,
   "fatca.ustaxpayer": false,

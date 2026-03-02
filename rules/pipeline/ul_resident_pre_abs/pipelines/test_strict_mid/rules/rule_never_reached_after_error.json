@@ -1,0 +1,15 @@
+{
+  "id": "rule_never_reached_after_error",
+  "type": "rule",
+  "description": "TEST: маркер (не должен выполняться, если strict сработал корректно)",
+  "role": "check",
+  "field": "test.after",
+  "operator": "equals",
+  "expected": "SHOULD_NOT_RUN",
+  "issue": {
+    "level": "WARNING",
+    "code": "WARN_TEST_AFTER_RAN",
+    "message": "ТЕСТ: дошли до шага после ошибки — strict не остановил пайплайн как ожидалось",
+    "field": "test.after"
+  }
+}

@@ -1,184 +1,193 @@
-# DSL rule engine prototype (vanilla Node.js)
+# DSL-движок валидации (prototype)
 
-This repo contains a small **JSON‑DSL** driven validation engine.
+Это прототип «движка правил» для валидации JSON-пэйлоадов через набор декларативных артефактов (rules/conditions/pipelines/predicates).
 
-## What it does
+Идея:
+- **Rule** описывает одну проверку поля (оператор, поле, ожидаемое значение/регэксп/словарь, текст ошибки и т.п.).
+- **Predicate** (предикат) — булева проверка, которую можно использовать в `when` у условий.
+- **Condition** — ветка `if/else`: если предикат `true`, выполняем `steps`.
+- **Pipeline** — последовательность шагов (`rule | condition | pipeline`), которую можно импортировать в другой pipeline.
 
-- Loads **artifacts** (pipelines / rules / conditions / dictionaries) from the `./rules` folder
-- Compiles references (`rule`, `condition`, `pipeline`) into fully-qualified ids
-- Executes a selected **pipeline** against a **flat payload** (dot-keys) and returns:
-  - `status`: `OK | WARNING | ERROR | EXCEPTION`
-  - `issues`: accumulated `WARNING`/`ERROR` items
-  - `trace`: optional execution trace (enabled by `--pretty` currently prints it too)
+Движок:
+1) загружает артефакты из `rules/**`,
+2) компилирует их в единый registry,
+3) исполняет выбранный pipeline для указанного payload,
+4) возвращает `status`, `issues` и `trace`.
 
-> Levels are engine-level only: **WARNING / ERROR / EXCEPTION**.  
-> Business interpretation (e.g. compliance blocks) is expected to be done upstream by analyzing returned issues.
+---
 
-## Quick start
+## Быстрый старт
 
 ```bash
-# run main pipeline against sample payload
 node index.js --payload ./payload.sample.json --pipeline pipeline_main --pretty
 ```
 
-### CLI
+Параметры:
+- `--payload <path>` — путь до JSON.
+- `--pipeline <id>` — id пайплайна для запуска (например `pipeline_main`).
+- `--pretty` — красивый JSON-вывод.
 
-`node index.js --payload <file.json> --pipeline <pipelineId> [--rules <rulesDir>] [--pretty]`
+---
 
-- `--payload` – path to JSON file with **flat fields**
-- `--pipeline` – pipeline id (folder name under `rules/pipeline/<id>/pipeline.json`)
-- `--rules` – optional rules directory (defaults to `./rules`)
-- `--pretty` – pretty JSON output
+## Структура правил (файлы)
 
-## Payload format (flat)
-
-The engine reads fields by **exact key**, e.g.
-
-```json
-{
-  "beneficiary.type": "UL_RESIDENT",
-  "beneficiary.inn": "4823057200",
-  "tax.foreign": false
-}
-```
-
-No nested objects are traversed in this prototype.
-
-## Directory layout
+Движок ожидает дерево вида:
 
 ```
-index.js
-/lib
-  loader.js        # loads artifacts from rules dir
-  resolver.js      # resolves relative refs to fully-qualified ids
-  compiler.js      # validates and compiles artifacts, detects duplicates
-  runner.js        # executes pipelines / rules / conditions
-  utils.js
-  /operators
-    check/         # check-role operators
-    predicate/     # predicate-role operators
-/rules
-  /pipeline
+rules/
+  library/
+    rules/
+    conditions/
+    predicates/
+    dictionaries/
+  pipeline/
     <pipelineId>/
       pipeline.json
-      /rules         # rules local to this pipeline (referenced as "rule_x")
-      /conditions    # conditions local to this pipeline (referenced as "cond_x")
-  /library
-    <pack>/<ruleId>.json   # reusable rules referenced as "library.pack.ruleId"
-    /common
-    /inn
-  /dictionary
-    *.json          # dictionaries for in_dictionary operator
+      rules/
+      conditions/
+      predicates/
+      dictionaries/
 ```
 
-## DSL
+Разрешено ссылаться на артефакты:
+- локально: `rule_xxx` / `cond_xxx` / `pred_xxx`
+- из библиотеки: `library.inn.checksum` и т.п.
+
+Примечание: **id артефакта должен быть уникален** (на уровне всего registry).
+
+---
+
+## Артефакты
 
 ### Rule
+Минимальная идея: «проверь поле оператором, а если не прошло — добавь issue».
 
-```json
-{
-  "id": "rule_x",
-  "type": "rule",
-  "description": "…",
-  "role": "check",
-  "operator": "not_empty",
-  "level": "ERROR",
-  "code": "ERR_SOMETHING",
-  "message": "Human readable message",
-  "field": "some.field",
-  "value": "optional operator arg"
-}
-```
+Схема (упрощённо):
+- `id` — уникальный идентификатор
+- `type: "rule"`
+- `description` — опционально
+- `field` — путь до поля в payload (dot-notation)
+- `operator` — имя оператора (например `not_empty`, `matches_regex`, `equals`)
+- `expected` — опционально (зависит от оператора)
+- `level` — `ERROR | WARNING | EXCEPTION` (что добавляем в issues)
+- `code` — машинный код ошибки
+- `message` — человекочитаемое сообщение
 
-- `role: "check"` produces issues when it fails.
-- `role: "predicate"` is allowed in `condition.when` and **never** produces issues.
+### Predicate
+Булево выражение для `when` в Condition.
+
+Схема (упрощённо):
+- `id`
+- `type: "predicate"`
+- `field` / `operator` / `expected` (как у rule)
 
 ### Condition
+Ветка `if`.
 
-```json
-{
-  "id": "cond_x",
-  "type": "condition",
-  "description": "…",
-  "when": { "all": ["pred_a", "pred_b"] },
-  "steps": [ { "rule": "rule_1" }, { "pipeline": "other_pipeline" } ]
-}
-```
-
-- `when` supports:
-  - `"pred_id"` (single predicate)
-  - `{ "all": ["pred1", "pred2"] }`
-  - `{ "any": ["pred1", "pred2"] }`
-- Predicates that evaluate to `UNDEFINED` are treated as **FALSE** and logged in trace.
-- Any runtime exception inside predicate/check/operator escalates to **EXCEPTION** and stops execution.
+Схема (упрощённо):
+- `id`
+- `type: "condition"`
+- `description` — опционально
+- `when` — ссылка на predicate (`pred_xxx` или `library.xxx`)
+- `steps` — массив шагов (rule/condition/pipeline)
 
 ### Pipeline
+Последовательность шагов.
+
+Схема (упрощённо):
+- `id`
+- `type: "pipeline"`
+- `description` — опционально
+- `strict` — **обязательный** boolean (`true` или `false`)
+- `message` — сообщение для strict-исключения (обязательно при `strict: true`)
+- `strictCode` — код strict-исключения (опционально, по умолчанию `STRICT_PIPELINE_FAILED`)
+- `flow` — массив шагов
+
+#### Strict pipelines (строгий режим)
+Если pipeline помечен как:
 
 ```json
 {
-  "id": "pipeline_main",
   "type": "pipeline",
-  "description": "…",
-  "flow": [
-    { "rule": "rule_x" },
-    { "condition": "cond_y" },
-    { "pipeline": "another_pipeline" }
-  ]
+  "strict": true,
+  "message": "Найдены ошибки при проверке документов",
+  "strictCode": "STRICT_PIPELINE_FAILED",
+  "flow": [ ... ]
 }
 ```
 
-## Output model
+то после выполнения `flow` движок проверит: появились ли внутри этого pipeline **хотя бы одна** issue уровня `ERROR` или `EXCEPTION`.
 
-Example:
+Если да — движок добавит *boundary issue*:
+- `level: "EXCEPTION"`
+- `code: strictCode || "STRICT_PIPELINE_FAILED"`
+- `message: pipeline.message`
+- `ruleId: "pipeline:<pipelineId>"`
+- `pipelineId: <pipelineId>`
 
-```json
-{
-  "status": "ERROR",
-  "control": "CONTINUE",
-  "issues": [
-    {
-      "kind": "ISSUE",
-      "level": "ERROR",
-      "code": "ERR_TAX_TIN_REQUIRED",
-      "field": "tax.tin",
-      "ruleId": "ul_resident_pre_abs.rule_tax_tin_required"
-    }
-  ],
-  "trace": [ ... ]
-}
-```
+и прервёт дальнейшее выполнение (control → `STOP`). В результате `status` всего запуска будет `EXCEPTION`.
 
-- `status` is the **max** observed level:
-  - `OK` (no issues)
-  - `WARNING` (warnings only)
-  - `ERROR` (at least one error)
-  - `EXCEPTION` (an exception occurred)
-- `control` is reserved for future orchestration (currently always `CONTINUE`).
+Зачем:
+- можно «завернуть» набор проверок в импортируемый pipeline и контролировать поток на границе,
+- при этом не превращать каждую внутреннюю ошибку в исключение,
+- и не терять единый `trace` на уровне главного пайплайна.
 
-## Adding operators
+Валидация схемы:
+- `strict` **обязан быть задан** автором пайплайна (нет неявного дефолта),
+- при `strict: true` поле `message` **обязательное**.
 
-Operators are plain JS modules under `lib/operators/<role>/`.
+---
 
-Each operator exports a function:
+## Результат выполнения
 
-```js
-module.exports = function operator(ctx, spec) {
-  // ctx.payload, ctx.get(field), …
-  // return { ok: true } or { ok: false, expected, actual }
-}
-```
+CLI возвращает:
+- `status`: `OK | EXCEPTION | ABORT`
+  - `OK` — дошли до конца без stop
+  - `EXCEPTION` — выполнение остановлено (EXCEPTION-rule или strict boundary)
+  - `ABORT` — упали с runtime exception (баг/неожиданная ошибка)
+- `control`: `CONTINUE | STOP`
+- `issues`: массив найденных проблем
+- `trace`: техническая трассировка выполнения
 
-See existing operators for examples.
+---
 
-## Generating PlantUML for a pipeline
+## Типовые ошибки компиляции (когда «движок ругается»)
+
+Это ошибки *в правилах/пайплайнах*, которые ловятся до исполнения.
+
+### Duplicate artifact id
+`Duplicate artifact id: <id>`
+
+В `rules/**` нашлись два артефакта с одинаковым id. Нужно переименовать один из них или удалить дубль.
+
+### Missing artifact referenced in condition / when references missing id
+Примеры:
+- `Condition X: when references missing id Y`
+- `Missing artifact referenced in condition:...: rule=...`
+
+В `condition.when` указан предикат, которого нет в registry, или в `condition.steps` указан `rule/condition/pipeline`, которого нет.
+
+### Pipeline strict must be explicitly set
+`Pipeline <id>: strict must be explicitly set to true|false`
+
+В пайплайне не указан `strict`. По правилам проекта он должен быть явно задан.
+
+### Pipeline message is required when strict=true
+`Pipeline <id>: message is required when strict=true`
+
+При строгом режиме сообщение обязательно.
+
+### Unknown operator
+Если rule/predicate ссылается на оператор, которого нет в движке (или опечатка), компиляция упадёт.
+
+---
+
+## PlantUML диаграмма пайплайна
+
+Скрипт генерации диаграммы:
 
 ```bash
-node scripts/pipeline2puml.js --pipeline pipeline_main
-# creates: rules/pipeline/pipeline_main/pipeline_main.puml
+node scripts/pipeline2puml.js --pipeline ul_resident_pre_abs
 ```
 
-Optional:
-- `--rules <dir>` to point to a different rules folder
-- `--out <file>` to override output path
-- `--expand 1` to inline one level of nested pipelines (default 0)
-
+Скрипт читает pipeline из `rules/`, строит activity-диаграмму PlantUML и сохраняет результат рядом (одноимённый `.puml`).

@@ -1,0 +1,12 @@
+{
+  "id": "test_strict_mid",
+  "type": "pipeline",
+  "description": "TEST strict mid-pipeline (должен падать в EXCEPTION если есть ERROR)",
+  "strict": true,
+  "code": "STRICT_PIPELINE_FAILED",
+  "message": "ТЕСТ: строгий пайплайн упал (внутренняя проверка сгенерила ERROR)",
+  "flow": [
+    { "rule": "rule_force_error" },
+    { "rule": "rule_never_reached_after_error" }
+  ]
+}

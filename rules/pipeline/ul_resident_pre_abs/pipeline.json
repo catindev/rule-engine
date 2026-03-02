@@ -1,6 +1,9 @@
 {
   "type": "pipeline",
   "description": "UL resident: проверки ДО госреестров и ДО АБС (demo)",
+  "strict": true,
+  "message": "Найдены ошибки в проверке UL resident (pre ABS)",
+  "code": "STRICT_PIPELINE_FAILED",
   "flow": [
     {
       "rule": "rule_beneficiary_type_required_exc"

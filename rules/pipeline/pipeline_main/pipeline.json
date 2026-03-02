@@ -1,6 +1,7 @@
 {
   "type": "pipeline",
   "description": "Entry pipeline (demo)",
+  "strict": true,
   "flow": [
     {
       "pipeline": "ul_resident_pre_abs"

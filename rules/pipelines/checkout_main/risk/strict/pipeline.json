@@ -5,8 +5,15 @@
   "code": "STRICT_RISK_FAILED",
   "message": "Риск-проверки не пройдены",
   "flow": [
-    { "pipeline": "checkout_main.risk.geo" },
-    { "pipeline": "checkout_main.risk.velocity" },
-    { "pipeline": "checkout_main.risk.device" }
-  ]
+    {
+      "pipeline": "checkout_main.risk.geo"
+    },
+    {
+      "pipeline": "checkout_main.risk.velocity"
+    },
+    {
+      "pipeline": "checkout_main.risk.device"
+    }
+  ],
+  "id": "checkout_main.risk.strict"
 }

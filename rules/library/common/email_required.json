@@ -11,5 +11,6 @@
     "bt": "DEMO: checkout/base",
     "hint": "Запросите email у клиента"
   },
-  "role": "check"
+  "role": "check",
+  "id": "library.common.email_required"
 }

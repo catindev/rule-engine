@@ -11,5 +11,6 @@
     "bt": "DEMO: checkout/risk/geo",
     "hint": "Передайте geoCountry (например, из антифрода)"
   },
-  "role": "check"
+  "role": "check",
+  "id": "checkout_main.risk.geo.rule_geo_country_required"
 }

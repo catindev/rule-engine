@@ -10,5 +10,6 @@
     "why": "Для 3DS2 важно понимать выбранный протокол",
     "bt": "DEMO: checkout/3ds"
   },
-  "role": "check"
+  "role": "check",
+  "id": "checkout_main.threeds_validate.rule_3ds_method_required"
 }

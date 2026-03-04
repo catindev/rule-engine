@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { assert } = require('./utils');
+const { assert, normalizeWhenExpr } = require('./utils');
 const { resolveRef } = require('./resolver');
 
 /**
@@ -109,8 +109,9 @@ function renderStep(compiled, step, lines, indent, scopePipelineId) {
     const c = compiled.registry.get(conditionId);
     assert(c && c.type === 'condition', `Missing condition artifact: ${conditionId}`);
 
-    const whenMode = c.whenMode || 'single';
-    const preds = Array.isArray(c.when) ? c.when : [];
+    const w = normalizeWhenExpr(c.when);
+    const whenMode = w.mode;
+    const preds = w.preds;
     const predLabels = preds
       .map((ref) => {
         const predId = resolveRef('rule', ref, scopePipelineId);
@@ -182,7 +183,8 @@ function generatePumlForEntryPipeline(compiled, rulesDir, entryPipelineId) {
   const stamp = nowStamp();
   const puml = renderPipelinePuml(compiled, entryPipelineId);
 
-  const outDir = entry.__file ? path.dirname(entry.__file) : rulesDir;
+  const src = compiled.sources instanceof Map ? compiled.sources.get(entryPipelineId) : null;
+  const outDir = src && src.file ? path.dirname(src.file) : rulesDir;
   const outPath = path.join(outDir, `${entryPipelineId}.${stamp}.puml`);
   fs.writeFileSync(outPath, puml, 'utf8');
   return { outPath };

@@ -11,5 +11,6 @@
     "bt": "DEMO: checkout/card",
     "hint": "Запросите CVV на форме"
   },
-  "role": "check"
+  "role": "check",
+  "id": "checkout_main.card_validate.rule_cvv_required"
 }

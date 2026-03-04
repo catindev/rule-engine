@@ -12,5 +12,6 @@
     "bt": "DEMO: checkout/base",
     "hint": "Проверьте, что клиент ввёл 16 цифр без пробелов"
   },
-  "role": "check"
+  "role": "check",
+  "id": "library.card.pan_16_digits"
 }

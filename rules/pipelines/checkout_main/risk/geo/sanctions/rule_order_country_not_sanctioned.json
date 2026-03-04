@@ -15,5 +15,6 @@
     "bt": "DEMO: checkout/risk/sanctions",
     "hint": "Если страна в списке — платеж должен быть отклонён"
   },
-  "role": "check"
+  "role": "check",
+  "id": "checkout_main.risk.geo.sanctions.rule_order_country_not_sanctioned"
 }

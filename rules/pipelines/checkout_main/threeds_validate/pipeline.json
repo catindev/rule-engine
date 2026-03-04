@@ -3,6 +3,9 @@
   "description": "Checkout: проверки 3DS (выполняются только если requested=true)",
   "strict": false,
   "flow": [
-    { "condition": "condition_3ds_required" }
-  ]
+    {
+      "condition": "condition_3ds_required"
+    }
+  ],
+  "id": "checkout_main.threeds_validate"
 }

@@ -11,5 +11,6 @@
     "what_to_do": "Передайте order.id",
     "bt": "DEMO: checkout/base"
   },
-  "role": "check"
+  "role": "check",
+  "id": "checkout_main.base_validate.rule_order_id_required"
 }

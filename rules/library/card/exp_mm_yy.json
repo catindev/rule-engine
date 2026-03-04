@@ -12,5 +12,6 @@
     "bt": "DEMO: checkout/card",
     "hint": "Ожидается формат MM/YY, например 12/29"
   },
-  "role": "check"
+  "role": "check",
+  "id": "library.card.exp_mm_yy"
 }

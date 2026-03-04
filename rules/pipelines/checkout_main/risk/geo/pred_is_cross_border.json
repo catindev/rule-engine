@@ -8,5 +8,6 @@
   "meta": {
     "why": "Cross-border обычно требует усиленных проверок",
     "bt": "DEMO: checkout/risk/geo"
-  }
+  },
+  "id": "checkout_main.risk.geo.pred_is_cross_border"
 }

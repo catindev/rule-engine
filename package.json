@@ -2,9 +2,15 @@
   "name": "dsl-engine-prototype",
   "version": "0.6.1",
   "type": "commonjs",
-  "main": "index.js",
+  "main": "lib/index.js",
   "license": "UNLICENSED",
   "scripts": {
     "demo": "node ./scripts/run-demo.js"
+  },
+  "bin": {
+    "checker": "bin/checker.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
   }
 }

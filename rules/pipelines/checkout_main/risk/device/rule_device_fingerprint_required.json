@@ -11,5 +11,6 @@
     "bt": "DEMO: checkout/risk/device",
     "hint": "Соберите DFP на фронтенде и передайте в payload"
   },
-  "role": "check"
+  "role": "check",
+  "id": "checkout_main.risk.device.rule_device_fingerprint_required"
 }

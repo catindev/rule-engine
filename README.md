@@ -19,14 +19,18 @@
 ## Быстрый старт
 
 ```bash
-node index.js --payload ./payload.sample.json --pipeline pipeline_main --pretty
+node server.js
+# или
+PORT=3001 RULES_DIR=./rules TRACE=1 node server.js
 ```
 
-Параметры:
+Запрос для теста:
 
-- `--payload <path>` путь до JSON.
-- `--pipeline <id>` id пайплайна для запуска (например `pipeline_main`).
-- `--pretty` красивый JSON-вывод.
+```bash
+curl -X POST http://localhost:3000/pipeline_main \
+  -H "Content-Type: application/json" \
+  -d @payloads/checkout.fail.strict.json | jq
+```
 
 ## Структура правил (файлы)
 

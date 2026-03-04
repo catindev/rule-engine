@@ -1,5 +1,10 @@
 {
   "type": "dictionary",
   "description": "Разрешённые значения threeDS.method",
-  "entries": ["NONE", "3DS1", "3DS2"]
+  "entries": [
+    "NONE",
+    "3DS1",
+    "3DS2"
+  ],
+  "id": "three_ds_methods"
 }

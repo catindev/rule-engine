@@ -12,5 +12,6 @@
     "bt": "DEMO: checkout/base",
     "hint": "amount > 0"
   },
-  "role": "check"
+  "role": "check",
+  "id": "checkout_main.base_validate.rule_amount_positive"
 }

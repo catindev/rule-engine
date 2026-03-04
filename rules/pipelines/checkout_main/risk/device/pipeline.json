@@ -3,7 +3,12 @@
   "description": "Checkout: device/IP проверки",
   "strict": false,
   "flow": [
-    { "rule": "rule_ip_required" },
-    { "rule": "rule_device_fingerprint_required" }
-  ]
+    {
+      "rule": "rule_ip_required"
+    },
+    {
+      "rule": "rule_device_fingerprint_required"
+    }
+  ],
+  "id": "checkout_main.risk.device"
 }

@@ -15,5 +15,6 @@
     "bt": "DEMO: checkout/base",
     "hint": "Разрешены RUB/USD/EUR"
   },
-  "role": "check"
+  "role": "check",
+  "id": "checkout_main.base_validate.rule_currency_supported"
 }

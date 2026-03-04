@@ -3,6 +3,9 @@
   "description": "Checkout: velocity-проверки",
   "strict": false,
   "flow": [
-    { "rule": "rule_orders_last10m_too_high" }
-  ]
+    {
+      "rule": "rule_orders_last10m_too_high"
+    }
+  ],
+  "id": "checkout_main.risk.velocity"
 }

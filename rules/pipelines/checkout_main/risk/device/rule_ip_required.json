@@ -11,5 +11,6 @@
     "bt": "DEMO: checkout/risk/device",
     "hint": "Передайте IP из ingress/gateway"
   },
-  "role": "check"
+  "role": "check",
+  "id": "checkout_main.risk.device.rule_ip_required"
 }

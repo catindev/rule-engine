@@ -1,5 +1,12 @@
 {
   "type": "dictionary",
   "description": "Разрешённые страны для проведения операции (демо)",
-  "entries": ["RU", "US", "PL", "DE", "FR"]
+  "entries": [
+    "RU",
+    "US",
+    "PL",
+    "DE",
+    "FR"
+  ],
+  "id": "order_countries_allowed"
 }

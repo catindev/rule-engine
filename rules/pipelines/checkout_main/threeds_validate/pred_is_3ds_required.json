@@ -8,5 +8,6 @@
   "meta": {
     "why": "3DS-проверки нужны только при включенном флаге",
     "bt": "DEMO: checkout/3ds"
-  }
+  },
+  "id": "checkout_main.threeds_validate.pred_is_3ds_required"
 }

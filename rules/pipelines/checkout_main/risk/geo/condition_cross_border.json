@@ -3,6 +3,9 @@
   "description": "Санкционные проверки делаем только для cross-border",
   "when": "pred_is_cross_border",
   "steps": [
-    { "pipeline": "checkout_main.risk.geo.sanctions" }
-  ]
+    {
+      "pipeline": "checkout_main.risk.geo.sanctions"
+    }
+  ],
+  "id": "checkout_main.risk.geo.condition_cross_border"
 }

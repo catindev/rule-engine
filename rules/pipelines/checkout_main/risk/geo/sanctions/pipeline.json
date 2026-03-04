@@ -3,6 +3,9 @@
   "description": "Checkout: санкционный стоп-лист по стране заказа",
   "strict": false,
   "flow": [
-    { "rule": "rule_order_country_not_sanctioned" }
-  ]
+    {
+      "rule": "rule_order_country_not_sanctioned"
+    }
+  ],
+  "id": "checkout_main.risk.geo.sanctions"
 }

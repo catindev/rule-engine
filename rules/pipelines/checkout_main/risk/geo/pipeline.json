@@ -3,7 +3,12 @@
   "description": "Checkout: гео-риск и санкционные проверки",
   "strict": false,
   "flow": [
-    { "rule": "rule_geo_country_required" },
-    { "condition": "condition_cross_border" }
-  ]
+    {
+      "rule": "rule_geo_country_required"
+    },
+    {
+      "condition": "condition_cross_border"
+    }
+  ],
+  "id": "checkout_main.risk.geo"
 }

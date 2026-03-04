@@ -1,9 +1,7 @@
-#!/usr/bin/env node
-
 const path = require("path");
 const fs = require("fs");
 
-const { loadArtifactsFromDir } = require("./lib/loader");
+const { loadArtifactsFromDir } = require("./lib/loader-fs");
 const { createEngine } = require("./lib/engine");
 const { generatePumlForEntryPipeline } = require("./lib/docgen");
 const { Operators } = require("./lib/operators");
@@ -29,9 +27,9 @@ function readJsonFile(p) {
 
 function loadAndCompile(rulesDir, entryPipelineId) {
   const dir = rulesDir || path.join(__dirname, "rules");
-  const artifacts = loadArtifactsFromDir(dir);
+  const { artifacts, sources } = loadArtifactsFromDir(dir);
   const engine = createEngine({ operators: Operators });
-  const compiled = engine.compile(artifacts);
+  const compiled = engine.compile(artifacts, { sources });
 
   // Auto-generate ONE PlantUML diagram for the entry pipeline.
   // Child pipelines DO NOT generate standalone diagrams.

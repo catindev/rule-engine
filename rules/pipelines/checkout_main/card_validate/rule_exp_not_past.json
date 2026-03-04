@@ -12,5 +12,6 @@
     "bt": "DEMO: checkout/card",
     "hint": "Это упрощённая проверка, в реальности сравнение делается по дате"
   },
-  "role": "check"
+  "role": "check",
+  "id": "checkout_main.card_validate.rule_exp_not_past"
 }

@@ -12,5 +12,6 @@
     "bt": "DEMO: checkout/risk/velocity",
     "hint": "Если ordersLast10m > 10 — вероятен бот/фрод"
   },
-  "role": "check"
+  "role": "check",
+  "id": "checkout_main.risk.velocity.rule_orders_last10m_too_high"
 }

@@ -1,0 +1,5 @@
+{
+  "type": "dictionary",
+  "description": "DEMO: страны в санкционном списке (не используется в правилах v3)",
+  "entries": ["IR", "KP", "SY"]
+}

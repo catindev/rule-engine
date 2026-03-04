@@ -1,8 +1,0 @@
-{
-  "type": "rule",
-  "description": "tax.isForeignTaxResident == Y",
-  "role": "predicate",
-  "operator": "equals",
-  "field": "tax.foreign",
-  "value": true
-}

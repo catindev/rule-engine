@@ -1,0 +1,5 @@
+{
+  "type": "dictionary",
+  "description": "Разрешённые страны для проведения операции (демо)",
+  "entries": ["RU", "US", "PL", "DE", "FR"]
+}

@@ -1,0 +1,16 @@
+{
+  "type": "rule",
+  "description": "Число заказов за последние 10 минут не должно быть > 10",
+  "level": "ERROR",
+  "code": "ERR_VELOCITY_TOO_HIGH",
+  "message": "Слишком много заказов за короткий период",
+  "field": "risk.ordersLast10m",
+  "operator": "less_than",
+  "value": 11,
+  "meta": {
+    "why": "Пример антифрод-ограничения",
+    "bt": "DEMO: checkout/risk/velocity",
+    "hint": "Если ordersLast10m > 10 — вероятен бот/фрод"
+  },
+  "role": "check"
+}

@@ -1,0 +1,11 @@
+{
+  "type": "pipeline",
+  "description": "Checkout: базовые поля заказа (без интеграций)",
+  "strict": false,
+  "flow": [
+    { "rule": "rule_order_id_required" },
+    { "rule": "rule_amount_positive" },
+    { "rule": "rule_currency_supported" },
+    { "rule": "library.common.email_required" }
+  ]
+}

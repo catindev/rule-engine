@@ -1,73 +1,68 @@
-const fs = require("fs");
-const path = require("path");
-const { loadArtifactsFromDir } = require("./lib/loader");
-const { compile } = require("./lib/compiler");
-const { runPipeline } = require("./lib/runner");
+#!/usr/bin/env node
 
-function loadAndCompile(rulesDir) {
-  const dir = rulesDir || path.join(__dirname, "rules");
-  const artifacts = loadArtifactsFromDir(dir);
-  const compiled = compile(artifacts);
-  return { artifacts, compiled };
-}
+const path = require('path');
+const fs = require('fs');
 
-function printUsageAndExit(code) {
-  const msg = `
-Usage:
-  node index.js --payload <file.json> [--pipeline <pipelineId>] [--rules <rulesDir>] [--pretty]
-  node index.js <payload.json> [--pipeline <pipelineId>] [--rules <rulesDir>] [--pretty]
-
-Defaults:
-  --pipeline pipeline_main
-  --rules    ./rules
-
-Output:
-  JSON to stdout (result of runPipeline).
-`;
-  console.error(msg.trim());
-  process.exit(code);
-}
+const { loadArtifactsFromDir } = require('./lib/loader');
+const { compile } = require('./lib/compiler');
+const { runPipeline } = require('./lib/runner');
+const { generatePumlForEntryPipeline } = require('./lib/docgen');
 
 function parseArgs(argv) {
-  const out = {
-    payloadPath: null,
-    pipelineId: "pipeline_main",
-    rulesDir: path.join(__dirname, "rules"),
-    pretty: false
-  };
-  const args = argv.slice(2);
-  if (args.length > 0 && !args[0].startsWith("--")) out.payloadPath = args[0];
-
-  for (let i = 0; i < args.length; i++) {
-    const a = args[i];
-    if (a === "--payload") { out.payloadPath = args[i + 1]; i++; continue; }
-    if (a === "--pipeline") { out.pipelineId = args[i + 1]; i++; continue; }
-    if (a === "--rules") { out.rulesDir = args[i + 1]; i++; continue; }
-    if (a === "--pretty") { out.pretty = true; continue; }
-    if (a === "--help" || a === "-h") printUsageAndExit(0);
+  const out = { pretty: false };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--pipeline') out.pipeline = argv[++i];
+    else if (a === '--payload') out.payload = argv[++i];
+    else if (a === '--rules') out.rules = argv[++i];
+    else if (a === '--pretty') out.pretty = true;
+    else if (a === '--help' || a === '-h') out.help = true;
+    else throw new Error(`Unknown аргумент: ${a}`);
   }
   return out;
 }
 
-function cliMain() {
-  const { payloadPath, pipelineId, rulesDir, pretty } = parseArgs(process.argv);
-  if (!payloadPath) printUsageAndExit(2);
+function readJsonFile(p) {
+  const raw = fs.readFileSync(p, 'utf8');
+  return JSON.parse(raw);
+}
 
-  const absPayload = path.isAbsolute(payloadPath) ? payloadPath : path.join(process.cwd(), payloadPath);
-  const absRules = path.isAbsolute(rulesDir) ? rulesDir : path.join(process.cwd(), rulesDir);
+function loadAndCompile(rulesDir, entryPipelineId) {
+  const dir = rulesDir || path.join(__dirname, 'rules');
+  const artifacts = loadArtifactsFromDir(dir);
+  const compiled = compile(artifacts);
 
-  const raw = fs.readFileSync(absPayload, "utf8");
-  const payload = JSON.parse(raw);
+  // Auto-generate ONE PlantUML diagram for the entry pipeline.
+  // Child pipelines DO NOT generate standalone diagrams.
+  if (entryPipelineId) {
+    generatePumlForEntryPipeline(compiled, dir, entryPipelineId);
+  }
 
-  const { compiled } = loadAndCompile(absRules);
-  const result = runPipeline(compiled, pipelineId, payload);
+  return { artifacts, compiled };
+}
 
-  const jsonOut = JSON.stringify(result, null, pretty ? 2 : 0);
-  process.stdout.write(jsonOut + "\n");
+function main() {
+  const args = parseArgs(process.argv.slice(2));
+  if (args.help || !args.pipeline) {
+    console.log('Usage: node index.js --pipeline <id> [--payload <file.json>] [--rules <rulesDir>] [--pretty]');
+    process.exit(args.pipeline ? 0 : 1);
+  }
+
+  const rulesDir = args.rules ? path.resolve(args.rules) : path.join(__dirname, 'rules');
+  const { compiled } = loadAndCompile(rulesDir, args.pipeline);
+
+  const payload = args.payload ? readJsonFile(path.resolve(args.payload)) : {};
+  const res = runPipeline(compiled, args.pipeline, payload);
+
+  if (args.pretty) {
+    console.log(JSON.stringify(res, null, 2));
+  } else {
+    console.log(JSON.stringify(res));
+  }
 }
 
 if (require.main === module) {
-  cliMain();
+  main();
 }
 
-module.exports = { loadAndCompile, compile, runPipeline };
+module.exports = { loadAndCompile };

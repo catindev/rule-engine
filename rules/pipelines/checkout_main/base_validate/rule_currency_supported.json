@@ -1,0 +1,19 @@
+{
+  "type": "rule",
+  "description": "Валюта должна поддерживаться",
+  "level": "ERROR",
+  "code": "ERR_CURRENCY_UNSUPPORTED",
+  "message": "Валюта не поддерживается",
+  "field": "order.currency",
+  "operator": "in_dictionary",
+  "dictionary": {
+    "type": "static",
+    "id": "currencies_supported"
+  },
+  "meta": {
+    "why": "Поддерживаем только заранее согласованные валюты",
+    "bt": "DEMO: checkout/base",
+    "hint": "Разрешены RUB/USD/EUR"
+  },
+  "role": "check"
+}

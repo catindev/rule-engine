@@ -1,0 +1,15 @@
+{
+  "type": "rule",
+  "description": "Device fingerprint обязателен",
+  "level": "ERROR",
+  "code": "ERR_DFP_REQUIRED",
+  "message": "Не передан device fingerprint",
+  "field": "risk.deviceFingerprint",
+  "operator": "not_empty",
+  "meta": {
+    "why": "Нужен для связки сессий и антифрода",
+    "bt": "DEMO: checkout/risk/device",
+    "hint": "Соберите DFP на фронтенде и передайте в payload"
+  },
+  "role": "check"
+}

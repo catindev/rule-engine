@@ -1,0 +1,12 @@
+{
+  "type": "pipeline",
+  "description": "Checkout: строгий блок риск-проверок (если есть ошибки, то стопим процесс)",
+  "strict": true,
+  "code": "STRICT_RISK_FAILED",
+  "message": "Риск-проверки не пройдены",
+  "flow": [
+    { "pipeline": "checkout_main.risk.geo" },
+    { "pipeline": "checkout_main.risk.velocity" },
+    { "pipeline": "checkout_main.risk.device" }
+  ]
+}

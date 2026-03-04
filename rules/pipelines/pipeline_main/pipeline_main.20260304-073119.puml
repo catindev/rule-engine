@@ -1,0 +1,63 @@
+@startuml
+title pipeline_main — Демо: основной пайплайн, запускающий валидацию checkout
+skinparam shadowing false
+skinparam roundcorner 14
+skinparam ActivityBorderColor #444444
+skinparam ActivityFontColor #111111
+skinparam ActivityBackgroundColor #F7F7F7
+skinparam ActivityBackgroundColor<<ERR>> #FFB3B3
+skinparam ActivityBorderColor<<ERR>> #B30000
+skinparam ActivityBackgroundColor<<WARN>> #FFE8A3
+skinparam ActivityBorderColor<<WARN>> #A07A00
+skinparam ActivityBackgroundColor<<EXC>> #FF6B6B
+skinparam ActivityBorderColor<<EXC>> #7A0000
+skinparam ActivityFontColor<<EXC>> #111111
+skinparam ActivityFontStyle<<EXC>> bold
+skinparam ActivityBackgroundColor<<PRED>> #DDDDDD
+skinparam ActivityBorderColor<<PRED>> #777777
+skinparam ActivityBackgroundColor<<LIB>> #C9F0EA
+skinparam ActivityBorderColor<<LIB>> #0F6B62
+start
+partition "pipeline_main — Демо: основной пайплайн, запускающий валидацию checkout" {
+  partition "checkout_main — Checkout: общий пайплайн валидации заявки на оплату" {
+    partition "checkout_main.base_validate — Checkout: базовые поля заказа (без интеграций)" {
+      :Идентификатор заказа обязателен | field: order.id | op: not_empty <<ERR>>;
+      :Сумма заказа должна быть положительной | field: order.amount | op: greater_than <<ERR>>;
+      :Валюта должна поддерживаться | field: order.currency | op: in_dictionary <<ERR>>;
+      :Email обязателен | field: customer.email | op: not_empty <<WARN>> <<LIB>>;
+    }
+    partition "checkout_main.card_validate — Checkout: проверки карточных полей (PAN/EXP/CVV)" {
+      :PAN должен состоять из 16 цифр | field: card.pan | op: matches_regex <<ERR>> <<LIB>>;
+      :Срок действия карты должен быть в формате MM/YY | field: card.exp | op: matches_regex <<ERR>> <<LIB>>;
+      :CVV обязателен | field: card.cvv | op: not_empty <<ERR>>;
+      :Срок действия карты не должен быть в прошлом (упрощённо: год >= 24) | field: card.exp | op: matches_regex <<ERR>>;
+    }
+    partition "checkout_main.threeds_validate — Checkout: проверки 3DS (выполняются только если requested=true)" {
+      if ("checkout_main.threeds_validate.condition_3ds_required | whenMode: single | when: ") then (true)
+        :Метод 3DS должен быть указан | field: threeDS.method | op: not_empty <<ERR>>;
+        :Метод 3DS должен быть одним из разрешённых (NONE,3DS1,3DS2) | field: threeDS.method | op: in_dictionary <<ERR>>;
+      else (false)
+      endif
+    }
+    partition "checkout_main.risk.strict — Checkout: строгий блок риск-проверок (если есть ошибки, то стопим процесс)" {
+      partition "checkout_main.risk.geo — Checkout: гео-риск и санкционные проверки" {
+        :Страна по геоданным обязательна | field: risk.geoCountry | op: not_empty <<ERR>>;
+        if ("checkout_main.risk.geo.condition_cross_border | whenMode: single | when: ") then (true)
+          partition "checkout_main.risk.geo.sanctions — Checkout: санкционный стоп-лист по стране заказа" {
+            :Страна заказа должна быть в списке разрешённых | field: order.country | op: in_dictionary <<ERR>>;
+          }
+        else (false)
+        endif
+      }
+      partition "checkout_main.risk.velocity — Checkout: velocity-проверки" {
+        :Число заказов за последние 10 минут не должно быть > 10 | field: risk.ordersLast10m | op: less_than <<ERR>>;
+      }
+      partition "checkout_main.risk.device — Checkout: device/IP проверки" {
+        :IP обязателен | field: risk.ip | op: not_empty <<ERR>>;
+        :Device fingerprint обязателен | field: risk.deviceFingerprint | op: not_empty <<ERR>>;
+      }
+    }
+  }
+}
+stop
+@enduml

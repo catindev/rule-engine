@@ -1,0 +1,7 @@
+{
+  "id": "pipeline_main",
+  "type": "pipeline",
+  "description": "Демо: основной пайплайн, запускающий валидацию checkout",
+  "strict": false,
+  "flow": [{ "pipeline": "checkout_main" }]
+}

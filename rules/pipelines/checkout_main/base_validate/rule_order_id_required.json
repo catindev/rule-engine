@@ -1,0 +1,15 @@
+{
+  "type": "rule",
+  "description": "Идентификатор заказа обязателен",
+  "level": "ERROR",
+  "code": "ERR_ORDER_ID_REQUIRED",
+  "message": "Не указан идентификатор заказа",
+  "field": "order.id",
+  "operator": "not_empty",
+  "meta": {
+    "why": "Без order.id невозможно связать проверку с платёжной сессией",
+    "what_to_do": "Передайте order.id",
+    "bt": "DEMO: checkout/base"
+  },
+  "role": "check"
+}

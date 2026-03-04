@@ -1,7 +1,0 @@
-{
-  "type": "rule",
-  "description": "agreement.statusEndDate not empty",
-  "role": "predicate",
-  "operator": "not_empty",
-  "field": "part.end"
-}

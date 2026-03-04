@@ -1,0 +1,5 @@
+{
+  "type": "dictionary",
+  "description": "Список поддерживаемых валют",
+  "entries": ["RUB", "USD", "EUR"]
+}

@@ -1,0 +1,16 @@
+{
+  "type": "rule",
+  "description": "PAN должен состоять из 16 цифр",
+  "level": "ERROR",
+  "code": "ERR_CARD_PAN_FORMAT",
+  "message": "Неверный формат номера карты (PAN)",
+  "field": "card.pan",
+  "operator": "matches_regex",
+  "value": "^\\d{16}$",
+  "meta": {
+    "why": "Минимальная транспортная проверка формата PAN до любых интеграций",
+    "bt": "DEMO: checkout/base",
+    "hint": "Проверьте, что клиент ввёл 16 цифр без пробелов"
+  },
+  "role": "check"
+}

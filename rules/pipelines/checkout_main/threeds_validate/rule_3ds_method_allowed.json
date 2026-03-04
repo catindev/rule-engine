@@ -1,0 +1,18 @@
+{
+  "type": "rule",
+  "description": "Метод 3DS должен быть одним из разрешённых (NONE,3DS1,3DS2)",
+  "level": "ERROR",
+  "code": "ERR_3DS_METHOD_INVALID",
+  "message": "Недопустимый метод 3DS",
+  "field": "threeDS.method",
+  "operator": "in_dictionary",
+  "dictionary": {
+    "type": "static",
+    "id": "three_ds_methods"
+  },
+  "meta": {
+    "why": "Защита от мусорных значений",
+    "bt": "DEMO: checkout/3ds"
+  },
+  "role": "check"
+}

@@ -1,0 +1,19 @@
+{
+  "type": "rule",
+  "description": "Страна заказа должна быть в списке разрешённых",
+  "level": "ERROR",
+  "code": "ERR_SANCTIONS_COUNTRY",
+  "message": "Операция запрещена для данной страны",
+  "field": "order.country",
+  "operator": "in_dictionary",
+  "dictionary": {
+    "type": "static",
+    "id": "order_countries_allowed"
+  },
+  "meta": {
+    "why": "Пример жёсткой бизнес-блокировки (демо)",
+    "bt": "DEMO: checkout/risk/sanctions",
+    "hint": "Если страна в списке — платеж должен быть отклонён"
+  },
+  "role": "check"
+}

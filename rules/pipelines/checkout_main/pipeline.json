@@ -1,0 +1,12 @@
+{
+  "id": "checkout_main",
+  "type": "pipeline",
+  "description": "Checkout: общий пайплайн валидации заявки на оплату",
+  "strict": false,
+  "flow": [
+    { "pipeline": "checkout_main.base_validate" },
+    { "pipeline": "checkout_main.card_validate" },
+    { "pipeline": "checkout_main.threeds_validate" },
+    { "pipeline": "checkout_main.risk.strict" }
+  ]
+}

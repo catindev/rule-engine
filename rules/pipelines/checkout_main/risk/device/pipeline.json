@@ -1,0 +1,9 @@
+{
+  "type": "pipeline",
+  "description": "Checkout: device/IP проверки",
+  "strict": false,
+  "flow": [
+    { "rule": "rule_ip_required" },
+    { "rule": "rule_device_fingerprint_required" }
+  ]
+}

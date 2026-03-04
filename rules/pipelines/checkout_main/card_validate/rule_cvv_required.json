@@ -1,0 +1,15 @@
+{
+  "type": "rule",
+  "description": "CVV обязателен",
+  "level": "ERROR",
+  "code": "ERR_CARD_CVV_REQUIRED",
+  "message": "Не указан CVV",
+  "field": "card.cvv",
+  "operator": "not_empty",
+  "meta": {
+    "why": "CVV нужен для авторизационных сообщений",
+    "bt": "DEMO: checkout/card",
+    "hint": "Запросите CVV на форме"
+  },
+  "role": "check"
+}

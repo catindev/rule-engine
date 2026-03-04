@@ -1,0 +1,14 @@
+{
+  "type": "rule",
+  "description": "Метод 3DS должен быть указан",
+  "level": "ERROR",
+  "code": "ERR_3DS_METHOD_REQUIRED",
+  "message": "Не указан метод 3DS",
+  "field": "threeDS.method",
+  "operator": "not_empty",
+  "meta": {
+    "why": "Для 3DS2 важно понимать выбранный протокол",
+    "bt": "DEMO: checkout/3ds"
+  },
+  "role": "check"
+}

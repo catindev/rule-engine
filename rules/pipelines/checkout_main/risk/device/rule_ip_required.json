@@ -1,0 +1,15 @@
+{
+  "type": "rule",
+  "description": "IP обязателен",
+  "level": "ERROR",
+  "code": "ERR_IP_REQUIRED",
+  "message": "Не передан IP клиента",
+  "field": "risk.ip",
+  "operator": "not_empty",
+  "meta": {
+    "why": "IP нужен для антифрода и 3DS/клиентской аналитики",
+    "bt": "DEMO: checkout/risk/device",
+    "hint": "Передайте IP из ingress/gateway"
+  },
+  "role": "check"
+}

@@ -1,0 +1,9 @@
+{
+  "type": "condition",
+  "description": "Выполнять 3DS-проверки только если threeDS.requested=true",
+  "when": "pred_is_3ds_required",
+  "steps": [
+    { "rule": "rule_3ds_method_required" },
+    { "rule": "rule_3ds_method_allowed" }
+  ]
+}

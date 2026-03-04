@@ -1,0 +1,15 @@
+{
+  "type": "rule",
+  "description": "Email обязателен",
+  "level": "WARNING",
+  "code": "WARN_EMAIL_REQUIRED",
+  "message": "Не указан email клиента",
+  "field": "customer.email",
+  "operator": "not_empty",
+  "meta": {
+    "why": "Email нужен для отправки чека/уведомлений и для последующих коммуникаций",
+    "bt": "DEMO: checkout/base",
+    "hint": "Запросите email у клиента"
+  },
+  "role": "check"
+}

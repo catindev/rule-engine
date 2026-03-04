@@ -1,0 +1,15 @@
+{
+  "type": "rule",
+  "description": "Страна по геоданным обязательна",
+  "level": "ERROR",
+  "code": "ERR_GEO_COUNTRY_REQUIRED",
+  "message": "Не определена страна по геоданным",
+  "field": "risk.geoCountry",
+  "operator": "not_empty",
+  "meta": {
+    "why": "Нужна для скоринга и аналитики",
+    "bt": "DEMO: checkout/risk/geo",
+    "hint": "Передайте geoCountry (например, из антифрода)"
+  },
+  "role": "check"
+}

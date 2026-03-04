@@ -1,0 +1,8 @@
+{
+  "type": "pipeline",
+  "description": "Checkout: проверки 3DS (выполняются только если requested=true)",
+  "strict": false,
+  "flow": [
+    { "condition": "condition_3ds_required" }
+  ]
+}

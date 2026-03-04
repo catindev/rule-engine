@@ -1,0 +1,11 @@
+{
+  "type": "pipeline",
+  "description": "Checkout: проверки карточных полей (PAN/EXP/CVV)",
+  "strict": false,
+  "flow": [
+    { "rule": "library.card.pan_16_digits" },
+    { "rule": "library.card.exp_mm_yy" },
+    { "rule": "rule_cvv_required" },
+    { "rule": "rule_exp_not_past" }
+  ]
+}

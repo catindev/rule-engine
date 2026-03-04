@@ -1,0 +1,16 @@
+{
+  "type": "rule",
+  "description": "Срок действия карты должен быть в формате MM/YY",
+  "level": "ERROR",
+  "code": "ERR_CARD_EXP_FORMAT",
+  "message": "Неверный формат срока действия карты",
+  "field": "card.exp",
+  "operator": "matches_regex",
+  "value": "^(0[1-9]|1[0-2])\\/[0-9]{2}$",
+  "meta": {
+    "why": "Проверка формата срока действия до попытки авторизации",
+    "bt": "DEMO: checkout/card",
+    "hint": "Ожидается формат MM/YY, например 12/29"
+  },
+  "role": "check"
+}

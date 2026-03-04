@@ -1,0 +1,23 @@
+{
+  "order.id": "ORD-1001",
+  "order.amount": 1999.99,
+  "order.currency": "RUB",
+  "order.country": "RU",
+  "order.isCrossBorder": false,
+  "order.promoCode": "",
+
+  "customer.id": "C-777",
+  "customer.email": "user@example.com",
+
+  "card.pan": "4111111111111111",
+  "card.exp": "12/29",
+  "card.cvv": "123",
+
+  "risk.ip": "92.38.152.10",
+  "risk.deviceFingerprint": "dfp_7c9f0b6a9a1e4b3d",
+  "risk.geoCountry": "RU",
+  "risk.ordersLast10m": 1,
+
+  "threeDS.requested": false,
+  "threeDS.method": "NONE"
+}

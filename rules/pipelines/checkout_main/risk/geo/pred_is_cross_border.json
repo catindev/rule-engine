@@ -1,0 +1,12 @@
+{
+  "type": "rule",
+  "role": "predicate",
+  "description": "order.isCrossBorder == true",
+  "field": "order.isCrossBorder",
+  "operator": "equals",
+  "value": true,
+  "meta": {
+    "why": "Cross-border обычно требует усиленных проверок",
+    "bt": "DEMO: checkout/risk/geo"
+  }
+}

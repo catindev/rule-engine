@@ -1,0 +1,16 @@
+{
+  "type": "rule",
+  "description": "Сумма заказа должна быть положительной",
+  "level": "ERROR",
+  "code": "ERR_AMOUNT_POSITIVE",
+  "message": "Сумма заказа должна быть больше нуля",
+  "field": "order.amount",
+  "operator": "greater_than",
+  "value": 0,
+  "meta": {
+    "why": "Транспортная проверка корректности суммы",
+    "bt": "DEMO: checkout/base",
+    "hint": "amount > 0"
+  },
+  "role": "check"
+}

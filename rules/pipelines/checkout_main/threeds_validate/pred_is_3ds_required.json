@@ -1,0 +1,12 @@
+{
+  "type": "rule",
+  "role": "predicate",
+  "description": "Признак необходимости 3DS",
+  "field": "threeDS.requested",
+  "operator": "equals",
+  "value": true,
+  "meta": {
+    "why": "3DS-проверки нужны только при включенном флаге",
+    "bt": "DEMO: checkout/3ds"
+  }
+}

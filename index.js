@@ -4,8 +4,7 @@ const path = require("path");
 const fs = require("fs");
 
 const { loadArtifactsFromDir } = require("./lib/loader");
-const { compile } = require("./lib/compiler");
-const { runPipeline } = require("./lib/runner");
+const { createEngine } = require("./lib/engine");
 const { generatePumlForEntryPipeline } = require("./lib/docgen");
 const { Operators } = require("./lib/operators");
 
@@ -31,7 +30,8 @@ function readJsonFile(p) {
 function loadAndCompile(rulesDir, entryPipelineId) {
   const dir = rulesDir || path.join(__dirname, "rules");
   const artifacts = loadArtifactsFromDir(dir);
-  const compiled = compile(artifacts, { operators: Operators });
+  const engine = createEngine({ operators: Operators });
+  const compiled = engine.compile(artifacts);
 
   // Auto-generate ONE PlantUML diagram for the entry pipeline.
   // Child pipelines DO NOT generate standalone diagrams.
@@ -39,7 +39,7 @@ function loadAndCompile(rulesDir, entryPipelineId) {
     generatePumlForEntryPipeline(compiled, dir, entryPipelineId);
   }
 
-  return { artifacts, compiled };
+  return { artifacts, compiled, engine };
 }
 
 function main() {
@@ -54,12 +54,10 @@ function main() {
   const rulesDir = args.rules
     ? path.resolve(args.rules)
     : path.join(__dirname, "rules");
-  const { compiled } = loadAndCompile(rulesDir, args.pipeline);
+  const { compiled, engine } = loadAndCompile(rulesDir, args.pipeline);
 
   const payload = args.payload ? readJsonFile(path.resolve(args.payload)) : {};
-  const res = runPipeline(compiled, args.pipeline, payload, {
-    operators: Operators,
-  });
+  const res = engine.runPipeline(compiled, args.pipeline, payload);
 
   if (args.pretty) {
     console.log(JSON.stringify(res, null, 2));

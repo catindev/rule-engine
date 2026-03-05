@@ -1,22 +1,15 @@
 # DSL-движок валидации (прототип)
 
-Это прототип движка правил для валидации JSON-пэйлоадов через набор декларативных артефактов (rules/conditions/pipelines/predicates).
+Это прототип движка правил для валидации JSON-пэйлоадов через набор декларативных артефактов в `rules/**`.
 
-Идея:
+Движок выполняет:
 
-- **Rule** описывает одну проверку поля (оператор, поле, ожидаемое значение/регэксп/словарь, текст ошибки и т.п.).
-- **Predicate** (предикат) булева проверка, которую можно использовать в `when` у условий.
-- **Condition** ветка `if/else`: если предикат `true`, выполняем `steps`.
-- **Pipeline** последовательность шагов (`rule | condition | pipeline`), которую можно импортировать в другой pipeline.
+1. загрузку артефактов из файловой системы (`rules/**.json`)
+2. компиляцию в единый registry (валидация схем, ссылок и видимости)
+3. исполнение выбранного pipeline для заданного payload
+4. возврат результата: `status`, `control`, `issues`, `trace`
 
-Движок:
-
-1. загружает артефакты из `rules/**`,
-2. компилирует их в единый registry,
-3. исполняет выбранный pipeline для указанного payload,
-4. возвращает `status`, `issues` и `trace`.
-
-## Быстрый старт
+## Быстрый старт (HTTP)
 
 ```bash
 node server.js
@@ -24,185 +17,331 @@ node server.js
 PORT=3001 RULES_DIR=./rules TRACE=1 node server.js
 ```
 
-Запрос для теста:
+Запуск пайплайна (pipelineId берется из URL):
 
 ```bash
 curl -X POST http://localhost:3000/pipeline_main \
   -H "Content-Type: application/json" \
-  -d @payloads/checkout.fail.strict.json | jq
+  -d @payloads/checkout.fail.strict.json
 ```
 
-## Структура правил (файлы)
+По умолчанию `trace` в ответе скрывается. Чтобы вернуть `trace` в ответе запустите сервер с `TRACE=1`.
 
-Движок ожидает дерево вида:
+## Публичный API (как библиотека)
 
-```
-rules/
-  library/
-    rules/
-    conditions/
-    predicates/
-    dictionaries/
-  pipeline/
-    <pipelineId>/
-      pipeline.json
-      rules/
-      conditions/
-      predicates/
-      dictionaries/
-```
+Основной API в `createEngine({ operators })`.
 
-Разрешено ссылаться на артефакты:
+- `compile(artifacts, { sources })` → `compiled`
+- `runPipeline(compiled, pipelineId, payload)` → результат выполнения
 
-- локально: `rule_xxx` / `cond_xxx` / `pred_xxx`
-- из библиотеки: `library.inn.checksum` и т.п.
+В сервере это выглядит так:
 
-Примечание: **id артефакта должен быть уникален** (на уровне всего registry).
+1. загрузка: `loadArtifactsFromDir(RULES_DIR)` → `{ artifacts, sources }`
+2. компиляция: `engine.compile(artifacts, { sources })`
+3. запуск: `engine.runPipeline(compiled, pipelineId, payload)`
 
-## Артефакты
+## Формат данных (payload)
 
-### Rule
+В прототипе используется **flat-only** доступ к данным.
 
-Минимальная идея: проверь поле оператором, а если не прошло добавь issue.
+Это значит:
 
-Схема (упрощенно):
+- `field` это **буквальный ключ** в payload
+- точки в ключах (`order.id`) часть имени ключа
+- навигации по вложенным объектам (`payload.order.id`) нет
 
-- `id` уникальный идентификатор
-- `type: "rule"`
-- `description` опционально
-- `field` путь до поля в payload (dot-notation)
-- `operator` имя оператора (например `not_empty`, `matches_regex`, `equals`)
-- `expected` опционально (зависит от оператора)
-- `level` `ERROR | WARNING | EXCEPTION` (что добавляем в issues)
-- `code` машинный код ошибки
-- `message` человекочитаемое сообщение
-
-### Predicate
-
-Булево выражение для `when` в Condition.
-
-Схема (упрощенно):
-
-- `id`
-- `type: "predicate"`
-- `field` / `operator` / `expected` (как у rule)
-
-### Condition
-
-Ветка `if`.
-
-Схема (упрощенно):
-
-- `id`
-- `type: "condition"`
-- `description` опционально
-- `when` ссылка на predicate (`pred_xxx` или `library.xxx`)
-- `steps` массив шагов (rule/condition/pipeline)
-
-### Pipeline
-
-Последовательность шагов.
-
-Схема (упрощенно):
-
-- `id`
-- `type: "pipeline"`
-- `description` опционально
-- `strict` **обязательный** boolean (`true` или `false`)
-- `message` сообщение для strict-исключения (обязательно при `strict: true`)
-- `strictCode` код strict-исключения (опционально, по умолчанию `STRICT_PIPELINE_FAILED`)
-- `flow` массив шагов
-
-#### Strict pipelines (строгий режим)
-
-Если pipeline помечен как:
+Пример payload:
 
 ```json
 {
-  "type": "pipeline",
-  "strict": true,
-  "message": "Найдены ошибки при проверке документов",
-  "strictCode": "STRICT_PIPELINE_FAILED",
-  "flow": [ ... ]
+  "order.id": "A100",
+  "order.amount": 1200,
+  "customer.phone": "+491234567890"
 }
 ```
 
-то после выполнения `flow` движок проверит: появились ли внутри этого pipeline **хотя бы одна** issue уровня `ERROR` или `EXCEPTION`.
+Wildcard `[*]` **поддержан в рантайме** как расширение flat-map:
 
-Если да движок добавит _boundary issue_:
+- допускается ровно один токен `[*]` в `field`
+- wildcard матчится по ключам вида `... [<число>] ...` (например `items[0].qty`)
+- для `check`-правил при `FAIL` создаются issue по каждому конкретному ключу (например `items[2].qty`)
+- для `predicate`-правил используется агрегация **ANY** (TRUE, если хотя бы один элемент TRUE)
 
-- `level: "EXCEPTION"`
-- `code: strictCode || "STRICT_PIPELINE_FAILED"`
-- `message: pipeline.message`
-- `ruleId: "pipeline:<pipelineId>"`
-- `pipelineId: <pipelineId>`
+Demo: pipeline `wildcard_demo` + payloads `payloads/wildcard_demo.*.json`.
 
-и прервет дальнейшее выполнение (control → `STOP`). В результате `status` всего запуска будет `EXCEPTION`.
+## Структура `rules/` и области видимости
 
-Зачем:
+Loader читает **все** `*.json` рекурсивно из `rules/`.
 
-- можно завернуть набор проверок в импортируемый pipeline и контролировать поток на границе,
-- при этом не превращать каждую внутреннюю ошибку в исключение,
-- и не терять единый `trace` на уровне главного пайплайна.
+Текущая структура (актуально по коду `artifact-normalizer.js`):
 
-Валидация схемы:
+```
+rules/
+  library/                 # переиспользуемые артефакты (id начинаются с library.)
+  dictionaries/            # справочники (глобально доступны)
+  pipelines/               # пайплайны и их локальные артефакты
+    <pipelinePath>/
+      pipeline.json
+      rule_x.json
+      condition_y.json
+      pred_z.json
+      <nestedPipelinePath>/
+        pipeline.json
+        ...
+```
 
-- `strict` **обязан быть задан** автором пайплайна (нет неявного дефолта),
-- при `strict: true` поле `message` **обязательное**.
+### Как формируется `pipelineId`
+
+Путь пайплайна определяется директориями внутри `rules/pipelines/` и объединяется точками.
+
+Пример:
+
+- файл: `rules/pipelines/checkout_main/base_validate/pipeline.json`
+- pipelineId: `checkout_main.base_validate`
+
+### Локальные артефакты и их id
+
+Движок изолирует видимость правил и условий между пайплайнами.
+
+- Артефакты **внутри pipeline** должны иметь id с префиксом `"<pipelineId>."`.
+  - пример: `checkout_main.base_validate.rule_amount_positive`
+
+- Ссылки внутри pipeline/condition можно писать коротко:
+  - `{ "rule": "rule_amount_positive" }`
+  - движок развернет это в `checkout_main.base_validate.rule_amount_positive`
+
+- Библиотечные артефакты указываются явно:
+  - `{ "rule": "library.common.email_required" }`
+
+Правила видимости (валидируются на compile-time):
+
+- `rule` / `condition` должны быть **локальными** для текущего pipeline **или** из `library.*`
+- `pipeline`-шаги могут ссылаться на другие пайплайны по их глобальному `pipelineId`
+
+## Артефакты (JSON)
+
+### 1) Rule
+
+Rule — атомарная проверка одного поля.
+
+Обязательные поля (по коду компилятора):
+
+- `id` (string, уникальный)
+- `type: "rule"`
+- `description` (string, обязателен)
+- `role: "check" | "predicate"`
+- `operator` (string)
+- `field` (string)
+
+Дополнительно для `role: "check"`:
+
+- `level: "WARNING" | "ERROR" | "EXCEPTION"`
+- `code` (string)
+- `message` (string)
+
+Для `role: "predicate"` запрещены: `level`, `code`, `message`.
+
+Опционально:
+
+- `meta` (object) — любые вспомогательные данные (почему/ссылка на БТ/подсказка и т.п.)
+
+#### Пример check-rule
+
+```json
+{
+  "type": "rule",
+  "description": "Сумма заказа должна быть положительной",
+  "role": "check",
+  "field": "order.amount",
+  "operator": "greater_than",
+  "value": 0,
+  "level": "ERROR",
+  "code": "ERR_AMOUNT_POSITIVE",
+  "message": "Сумма заказа должна быть больше нуля",
+  "meta": { "why": "Транспортная проверка", "hint": "amount > 0" },
+  "id": "checkout_main.base_validate.rule_amount_positive"
+}
+```
+
+#### Пример predicate-rule
+
+```json
+{
+  "type": "rule",
+  "role": "predicate",
+  "description": "Признак необходимости 3DS",
+  "field": "threeDS.requested",
+  "operator": "equals",
+  "value": true,
+  "meta": { "why": "3DS-проверки нужны только при включенном флаге" },
+  "id": "checkout_main.threeds_validate.pred_is_3ds_required"
+}
+```
+
+> В рантайме `UNDEFINED` у предиката трактуется как `FALSE`.
+
+### 2) Condition
+
+Condition - условная ветка: выполняет `steps`, если условие `when` истинно.
+
+Обязательные поля:
+
+- `id`
+- `type: "condition"`
+- `description` (string, обязателен)
+- `when`:
+  - строка: `"pred_x"`
+  - или объект: `{ "all": ["pred1", "pred2"] }` / `{ "any": [...] }`
+
+- `steps` (non-empty array)
+
+Пример:
+
+```json
+{
+  "type": "condition",
+  "description": "Выполнять 3DS-проверки только если threeDS.requested=true",
+  "when": "pred_is_3ds_required",
+  "steps": [
+    { "rule": "rule_3ds_method_required" },
+    { "rule": "rule_3ds_method_allowed" }
+  ],
+  "id": "checkout_main.threeds_validate.condition_3ds_required"
+}
+```
+
+---
+
+### 3) Pipeline
+
+Pipeline — последовательность шагов. Шаги могут быть:
+
+- `{ "rule": "..." }`
+- `{ "condition": "..." }`
+- `{ "pipeline": "..." }`
+
+Обязательные поля:
+
+- `id`
+- `type: "pipeline"`
+- `description` (string, обязателен)
+- `strict` (boolean, **обязательно указан явно**)
+- `flow` (non-empty array)
+
+Если `strict: true`, дополнительно:
+
+- `message` (string, обязателен)
+- `strictCode` (string, опционально; по умолчанию `STRICT_PIPELINE_FAILED`)
+
+Пример:
+
+```json
+{
+  "id": "checkout_main.risk.strict",
+  "type": "pipeline",
+  "description": "Критический блок риск-проверок",
+  "strict": true,
+  "message": "Найдены критические ошибки",
+  "strictCode": "RISK_BLOCK_FAILED",
+  "flow": [{ "rule": "rule_sanctions_country_block" }]
+}
+```
+
+#### Strict pipelines (строгий режим)
+
+Если pipeline помечен как `strict: true`, то после выполнения его `flow` движок проверит: появились ли внутри этого pipeline **хотя бы одна** issue уровня `ERROR` или `EXCEPTION`.
+
+Если да — добавляется boundary-issue и выполнение останавливается (`control=STOP`, `status=EXCEPTION`).
+
+---
+
+### 4) Dictionary
+
+Справочник (`type: "dictionary"`) доступен глобально из операторов `in_dictionary`.
+
+Для `in_dictionary` сейчас поддерживается только:
+
+```json
+"dictionary": { "type": "static", "id": "<dictionaryId>" }
+```
+
+Компилятор проверяет, что такой dictionary действительно загружен.
+
+## Операторы
+
+Операторы определены в `lib/operators/*` и разделены на два набора:
+
+- `operators.check` для `role: check`
+- `operators.predicate` для `role: predicate`
+
+Список (как в `lib/operators/index.js`):
+
+**check**:
+
+- `not_empty`, `is_empty`
+- `length_equals`, `length_max`
+- `matches_regex`
+- `in_dictionary`
+- `equals`, `not_equals`
+- `contains`
+- `greater_than`, `less_than`
+- `field_less_than_field`, `field_greater_than_field`
+- `any_filled`
+- `valid_inn`, `valid_ogrn`
+
+**predicate**:
+
+- `equals`, `not_equals`
+- `not_empty`, `is_empty`
+- `matches_regex`
+- `in_dictionary`
+- `contains`
 
 ## Результат выполнения
 
-CLI возвращает:
+`runPipeline()` возвращает объект:
 
 - `status`: `OK | EXCEPTION | ABORT`
-  - `OK` дошли до конца без stop
-  - `EXCEPTION` выполнение остановлено (EXCEPTION-rule или strict boundary)
-  - `ABORT` упали с runtime exception (баг/неожиданная ошибка)
-- `control`: `CONTINUE | STOP`
+  - `OK` — дошли до конца
+  - `EXCEPTION` — остановились по EXCEPTION-rule или strict boundary
+  - `ABORT` — runtime exception (баг/неожиданная ошибка)
+
+- `control`: `CONTINUE | STOP` (присутствует для OK/EXCEPTION)
 - `issues`: массив найденных проблем
-- `trace`: техническая трассировка выполнения
+- `trace`: техническая трассировка (может быть скрыта сервером)
 
-## Типовые ошибки компиляции (когда движок ругается)
+Пример issue (формируется рантаймом при `FAIL` check-rule):
 
-Это ошибки _в правилах/пайплайнах_, которые ловятся до исполнения.
-
-### Duplicate artifact id
-
-`Duplicate artifact id: <id>`
-
-В `rules/**` нашлись два артефакта с одинаковым id. Нужно переименовать один из них или удалить дубль.
-
-### Missing artifact referenced in condition / when references missing id
-
-Примеры:
-
-- `Condition X: when references missing id Y`
-- `Missing artifact referenced in condition:...: rule=...`
-
-В `condition.when` указан предикат, которого нет в registry, или в `condition.steps` указан `rule/condition/pipeline`, которого нет.
-
-### Pipeline strict must be explicitly set
-
-`Pipeline <id>: strict must be explicitly set to true|false`
-
-В пайплайне не указан `strict`. По правилам проекта он должен быть явно задан.
-
-### Pipeline message is required when strict=true
-
-`Pipeline <id>: message is required when strict=true`
-
-При строгом режиме сообщение обязательно.
-
-### Unknown operator
-
-Если rule/predicate ссылается на оператор, которого нет в движке (или опечатка), компиляция упадет.
-
-## PlantUML диаграмма пайплайна
-
-Скрипт генерации диаграммы:
-
-```bash
-node scripts/pipeline2puml.js --pipeline ul_resident_pre_abs
+```json
+{
+  "kind": "ISSUE",
+  "level": "ERROR",
+  "code": "ERR_AMOUNT_POSITIVE",
+  "message": "Сумма заказа должна быть больше нуля",
+  "field": "order.amount",
+  "ruleId": "checkout_main.base_validate.rule_amount_positive",
+  "expected": 0,
+  "actual": 1200,
+  "stepId": null
+}
 ```
 
-Скрипт читает pipeline из `rules/`, строит activity-диаграмму PlantUML и сохраняет результат рядом (одноименный `.puml`).
+## PlantUML диаграммы пайплайнов
+
+В репозитории есть генератор диаграмм в `tools/docgen-plantuml.js`, который умеет строить **одну** activity-диаграмму для entry pipeline, включая все вложенные пайплайны inline.
+
+В текущем виде удобнее вызывать его напрямую (с правильной сигнатурой):
+
+```bash
+node -e "const path=require('path'); const {loadArtifactsFromDir}=require('./lib/loader-fs'); const {createEngine}=require('./lib/engine'); const {Operators}=require('./lib/operators'); const {generatePumlForEntryPipeline}=require('./tools/docgen-plantuml'); const rulesDir=path.join(__dirname,'rules'); const {artifacts,sources}=loadArtifactsFromDir(rulesDir); const engine=createEngine({operators:Operators}); const compiled=engine.compile(artifacts,{sources}); const r=generatePumlForEntryPipeline(compiled, rulesDir, 'pipeline_main'); console.log('Wrote:', r.outPath);"
+```
+
+## Важные ограничения прототипа
+
+- payload читается только в **flat-only** режиме (точное совпадение ключа)
+- wildcard реализован в рантайме (см. раздел про payload)
+- справочники поддержаны только в статическом виде (`dictionary.type = static`)
+
+## Версия
+
+`package.json`: `0.6.1`

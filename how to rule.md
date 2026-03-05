@@ -1,247 +1,378 @@
-# Как писать валидацию на DSL движке правил
+# Руководство по использованию движка правил для пользователей
 
-## 1. Что это вообще такое?
+Руководство о том как описывать бизнес‑валидацию в JSON, не изменяя код сервиса.
 
-**Rule DSL** это способ описывать проверки (валидацию) данных **в JSON**, без написания кода.
+Главная идея движка:
 
-Вы описываете:
+> Бизнес‑правила описываются аналитиками в DSL, а не реализуются разработчиками в коде.
 
-- какие поля обязательны
-- какие значения допустимы
-- какие проверки включаются при определенных условиях
-- в каком порядке выполняются проверки
+Это позволяет:
 
-Движок читает JSON‑файлы и сам выполняет эти проверки. Вам нужно только понимать JSON.
+- менять правила без релиза сервиса
+- хранить бизнес‑логику в JSON‑артефактах
+- делать проверки прозрачными и трассируемыми
+- уменьшать нагрузку на разработчиков
 
-# 2. Базовые сущности
+# Зачем нужен DSL
 
-В системе есть 3 типа объектов:
+Обычный сценарий разработки:
 
-| Тип           | Что делает                                           |
-| ------------- | ---------------------------------------------------- |
-| **rule**      | Проверяет одно условие                               |
-| **condition** | Выполняет проверки только если условие истинно       |
-| **pipeline**  | Последовательность шагов (главный сценарий проверки) |
+1. аналитик формулирует правило, согласовывает описание
+2. разработчик пишет код, проходит ревью
+3. релиз согласовывается, сервис пересобирается
+4. если правило меняется, то всё повторяется снова
 
-# 3. Rule (атомарное правило проверки)
+И это всё даже не продакшен, а обычный тестовый контур.. DSL решает эту проблему.
 
-Самая базовая единица — правило.
-
-Пример: поле обязательно.
+Аналитик сразу описывает правило в такой схеме:
 
 ```json
 {
-  "id": "rule_inn_required",
-  "type": "rule",
-  "description": "ИНН обязателен",
-  "role": "check",
   "operator": "not_empty",
-  "level": "ERROR",
-  "code": "ERR_INN_REQUIRED",
-  "message": "Не указан ИНН",
-  "field": "beneficiary.inn"
+  "field": "customer.email"
 }
 ```
 
-Что здесь важно:
+Движок выполняет проверку формируя код для нее вместо разработчика.
 
-- `operator` тип проверки
-- `field` какое поле проверяется
-- `level` насколько серьезна ошибка
+# Основные сущности DSL
 
-# 4. Уровни ошибок
+| Тип       | Назначение          |
+| --------- | ------------------- |
+| rule      | атомарная проверка  |
+| predicate | логическое условие  |
+| condition | условная логика     |
+| pipeline  | сценарий выполнения |
 
-| Уровень       | Что означает                                 |
-| ------------- | -------------------------------------------- |
-| **WARNING**   | Предупреждение, пайплайн продолжится         |
-| **ERROR**     | Валидация не прошла, но пайплайн продолжится |
-| **EXCEPTION** | Немедленно прерывает выполнение пайплайна    |
+---
 
-Важно:
+# Структура проекта
 
-- WARNING и ERROR **не останавливают** выполнение
-- EXCEPTION **останавливает** выполнение
-
-# 5. Основные операторы
-
-| Оператор        | Что делает                          |
-| --------------- | ----------------------------------- |
-| `not_empty`     | Поле не пустое                      |
-| `equals`        | Равно значению                      |
-| `matches_regex` | Соответствует регулярному выражению |
-| `in_dictionary` | Значение есть в справочнике         |
-| `any_filled`    | Заполнено хотя бы одно поле         |
-
-# 6. Predicate (логическое условие)
-
-Predicate - это правило, которое возвращает true или false и используется внутри condition.
-
-```json
-{
-  "id": "pred_is_foreign_tax_yes",
-  "type": "rule",
-  "role": "predicate",
-  "operator": "equals",
-  "field": "tax.foreign",
-  "value": true
-}
-```
-
-У predicate нет `level`, `code`, `message`.
-
-# 7. Condition (условная логика)
-
-Condition выполняет `steps` только если `when` выполняется.
-
-```json
-{
-  "id": "cond_foreign_tax_fields",
-  "type": "condition",
-  "description": "Если есть иностранное налогообложение",
-  "when": { "all": ["pred_is_foreign_tax_yes"] },
-  "steps": [
-    { "rule": "rule_tax_country_required" },
-    { "rule": "rule_tax_tin_required" }
-  ]
-}
-```
-
-`when` может быть:
-
-```json
-{ "all": ["pred1", "pred2"] }
-{ "any": ["pred1", "pred2"] }
-```
-
-# 8. Pipeline (сценарий проверки)
-
-Pipeline - это список шагов с проверками (сценарий выполнения проверок).
-
-```json
-{
-  "id": "check_ul",
-  "type": "pipeline",
-  "description": "Проверить юрлицо",
-  "strict": false,
-  "flow": [
-    { "rule": "rule_inn_required" },
-    { "condition": "cond_foreign_tax_fields" }
-  ]
-}
-```
-
-# 9. Strict-режим (строгий пайплайн)
-
-Strict-режим - это способ сгруппировать проверки, которые сами по себе не являются EXCEPTION, но должны стать причиной исключения, если внутри группы есть хотя бы одна ошибка.
-
-Это удобно, когда:
-
-- внутри блока могут быть обычные ERROR,
-- но если хотя бы одна из них произошла, то вся группа должна считаться критической.
-
-## Как выглядит strict pipeline
-
-```json
-{
-  "id": "check_documents",
-  "type": "pipeline",
-  "description": "Проверка документов",
-  "strict": true,
-  "message": "Найдены ошибки при проверке документов",
-  "code": "STRICT_DOCUMENTS_FAILED",
-  "flow": [
-    { "rule": "rule_passport_required" },
-    { "rule": "rule_passport_format" }
-  ]
-}
-```
-
-Что это означает:
-
-1. Внутри выполняются обычные правила (с level = ERROR)
-2. Если внутри есть хотя бы одна ERROR, то движок автоматически создает EXCEPTION на уровне пайплайна
-3. Статус выполнения становится `EXCEPTION`
-4. Возвращается `code` и `message` пайплайна
-
-Важно:
-
-- `strict` **обязательно должен быть явно указан** (`true` или `false`)
-- Если `strict: true`, то `message` обязателен
-- `strict` не меняет правила внутри, а только эскалирует результат группы
-
-Это используется для логических границ процесса. Например:
-
-- Проверка документов
-- Проверка налогового статуса
-- Проверка полномочий
-
-# 10. Library (библиотека переиспользуемых правил)
-
-Если правило используется в разных пайплайнах, оно кладется в library.
-
-```json
-{ "rule": "library.inn.checksum" }
-```
-
-Это означает, что файл лежит здесь:
-
-```
-rules/library/inn/checksum.json
-```
-
-# 11. Структура проекта
+Пример структуры каталога правил:
 
 ```
 rules/
-  pipeline/
-    pipeline_id/
+
+  pipelines/
+    checkout/
       pipeline.json
-      rules/
-      conditions/
+      rule_email_required.json
+      rule_email_format.json
+      rule_phone_required.json
+      cond_foreign_customer.json
+
   library/
+    email/
+      email_format.json
+
   dictionary/
+    countries.json
+    currencies.json
 ```
 
-# 12. Как писать новую валидацию (пошагово)
+Что где лежит:
 
-### Шаг 1. Определить обязательные поля
+| Каталог           | Назначение                             |
+| ----------------- | -------------------------------------- |
+| pipelines         | сценарии проверок                      |
+| pipeline/checkout | локальные правила конкретного pipeline |
+| library           | переиспользуемые правила               |
+| dictionary        | справочники значений для правил        |
 
-Создать rule с `not_empty`.
+# Rule (атомарная проверка)
 
-### Шаг 2. Добавить форматные проверки
+Rule это самая маленькая единица проверки.
 
-`matches_regex`, `valid_inn` и т.п.
+Пример: email обязателен.
 
-### Шаг 3. Добавить условные проверки
+```json
+{
+  "id": "rule_email_required",
+  "type": "rule",
+  "role": "check",
+  "operator": "not_empty",
+  "field": "customer.email",
+  "level": "ERROR",
+  "code": "EMAIL_REQUIRED",
+  "message": "Email обязателен"
+}
+```
 
-1. Создать predicate
-2. Подключить predicate в condition
-3. Подключить condition в pipeline
+# Predicate (логическое условие)
 
-### Шаг 4. Добавить правило в pipeline
+Predicate возвращает **true** или **false**.
 
-В нужном месте и порядке.
+Используется для ветвления логики.
 
-# 13. Частые ошибки
+```json
+{
+  "id": "pred_is_foreign",
+  "type": "rule",
+  "role": "predicate",
+  "operator": "equals",
+  "field": "customer.country",
+  "value": "DE"
+}
+```
 
-| Ошибка                        | Причина                               |
-| ----------------------------- | ------------------------------------- |
-| Missing artifact              | Неверный id правила                   |
-| Duplicate id                  | Два файла с одинаковым id             |
-| strict must be explicitly set | Не указан strict                      |
-| message required for strict   | Нет message при strict=true           |
-| Predicate treated as false    | Поле отсутствует или не соответствует |
+# Condition (условное выполнение)
+
+Condition выполняет шаги (steps) только если predicate вернул true.
+
+```json
+{
+  "id": "cond_foreign_customer",
+  "type": "condition",
+  "when": {
+    "all": ["pred_is_foreign"]
+  },
+  "steps": [{ "rule": "rule_passport_required" }]
+}
+```
+
+# Pipeline (сценарий проверки)
+
+Pipeline объединяет все проверки в последовательность.
+
+```json
+{
+  "id": "checkout_validation",
+  "type": "pipeline",
+  "strict": false,
+  "flow": [
+    { "rule": "rule_email_required" },
+    { "condition": "cond_foreign_customer" }
+  ]
+}
+```
+
+# Library (переиспользуемые правила)
+
+Library содержит правила, которые используются в разных pipeline.
+
+Пример:
+
+```
+rules/library/email/email_format.json
+```
+
+```json
+{
+  "id": "library.email.format",
+  "type": "rule",
+  "role": "check",
+  "operator": "matches_regex",
+  "field": "customer.email",
+  "value": "^[^@]+@[^@]+$",
+  "level": "ERROR",
+  "code": "EMAIL_INVALID",
+  "message": "Некорректный email"
+}
+```
+
+Подключение:
+
+```json
+{ "rule": "library.email.format" }
+```
+
+# Dictionaries (справочники)
+
+Справочники используются оператором `in_dictionary`.
+
+Пример dictionary:
+
+```
+rules/dictionary/countries.json
+```
+
+```json
+["DE", "FR", "IT", "ES"]
+```
+
+Rule:
+
+```json
+{
+  "operator": "in_dictionary",
+  "field": "customer.country",
+  "dictionary": "countries"
+}
+```
+
+# 10. Scoping
+
+Scope показывает **где выполняется правило**.
+
+Примеры scope:
+
+```
+pipeline:checkout
+condition:checkout.cond_foreign
+pipeline:checkout:steps
+```
+
+Это важно для:
+
+- trace
+- диагностики
+- понимания контекста выполнения
+
+---
+
+# 11. Trace выполнения
+
+Trace позволяет увидеть **как движок исполнил правила**.
+
+Запуск сервера:
+
+```bash
+TRACE=1 node server.js
+```
+
+Ответ будет содержать:
+
+```json
+"trace": []
+```
+
+Trace показывает:
+
+- какие правила выполнялись
+- какие условия сработали
+- какие значения были проверены
+
+---
+
+# 12. Бизнес‑кейс: интернет‑магазин
+
+Представим задачу.
+
+Аналитик должен описать правила проверки заказа:
+
+1. email обязателен
+2. телефон обязателен
+3. если клиент иностранный → нужен паспорт
+4. валюта заказа должна быть из списка
+5. количество товаров не должно превышать лимит
+
+Раньше для этого нужен разработчик.
+
+Теперь аналитик пишет DSL.
+
+---
+
+## Правило email
+
+```json
+{
+  "id": "rule_email_required",
+  "type": "rule",
+  "role": "check",
+  "operator": "not_empty",
+  "field": "customer.email",
+  "level": "ERROR",
+  "code": "EMAIL_REQUIRED",
+  "message": "Email обязателен"
+}
+```
+
+---
+
+## Проверка валюты
+
+```json
+{
+  "id": "rule_currency_valid",
+  "type": "rule",
+  "role": "check",
+  "operator": "in_dictionary",
+  "field": "order.currency",
+  "dictionary": "currencies",
+  "level": "ERROR",
+  "code": "CURRENCY_INVALID"
+}
+```
+
+---
+
+## Условие иностранного клиента
+
+Predicate:
+
+```json
+{
+  "id": "pred_foreign_customer",
+  "type": "rule",
+  "role": "predicate",
+  "operator": "not_equals",
+  "field": "customer.country",
+  "value": "RU"
+}
+```
+
+Condition:
+
+```json
+{
+  "id": "cond_foreign_passport",
+  "type": "condition",
+  "when": { "all": ["pred_foreign_customer"] },
+  "steps": [{ "rule": "rule_passport_required" }]
+}
+```
+
+---
+
+## Pipeline заказа
+
+```json
+{
+  "id": "checkout",
+  "type": "pipeline",
+  "strict": false,
+  "flow": [
+    { "rule": "rule_email_required" },
+    { "rule": "rule_phone_required" },
+    { "rule": "rule_currency_valid" },
+    { "condition": "cond_foreign_passport" }
+  ]
+}
+```
+
+---
+
+# 13. Что получает аналитик
+
+DSL даёт:
+
+✔ контроль над правилами
+
+✔ возможность быстро менять бизнес‑логику
+
+✔ прозрачность выполнения
+
+✔ trace диагностику
+
+✔ отсутствие зависимости от разработчиков
+
+---
 
 # 14. Принципы проектирования
 
-1. **rule** атомарная проверка
-2. **condition** логическое ветвление
-3. **pipeline** сценарий
-4. **library** переиспользуемое
-5. **WARNING** и **ERROR** накапливаются
-6. **EXCEPTION** останавливает выполнение
-7. **strict** для эскалация группы проверок
+1. правила должны быть атомарными
+2. условия должны быть простыми
+3. pipeline должен отражать бизнес‑процесс
+4. library использовать для повторяющихся правил
+
+---
 
 # 15. Главное правило
 
-> Если можно сделать проверку отдельным rule, то делайте отдельным rule. Мелкие атомарные правила легче читать, поддерживать и переиспользовать.
+> Если правило можно вынести в отдельный rule — выносите.
+
+Это делает систему:
+
+- проще
+- прозрачнее
+- безопаснее

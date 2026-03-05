@@ -1,0 +1,13 @@
+{
+  "type": "rule",
+  "role": "check",
+  "description": "MAX(qty) должен быть < 100 (MAX)",
+  "field": "checkout.items[*].qty",
+  "operator": "less_than",
+  "value": 100,
+  "aggregate": { "mode": "MAX", "onEmpty": "PASS" },
+  "level": "WARNING",
+  "code": "WARN_MAX_QTY_LT_100",
+  "message": "Слишком большое количество товара",
+  "id": "wildcard_agg_demo.rule_max_qty_le_100"
+}

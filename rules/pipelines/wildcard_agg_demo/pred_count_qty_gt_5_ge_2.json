@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "role": "predicate",
+  "description": "Хотя бы 2 товара с qty > 5 (COUNT >= 2)",
+  "field": "checkout.items[*].qty",
+  "operator": "greater_than",
+  "value": 5,
+  "aggregate": { "mode": "COUNT", "op": ">=", "value": 2, "onEmpty": "FALSE" },
+  "id": "wildcard_agg_demo.pred_count_qty_gt_5_ge_2"
+}

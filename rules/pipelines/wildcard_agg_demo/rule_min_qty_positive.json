@@ -1,0 +1,13 @@
+{
+  "type": "rule",
+  "role": "check",
+  "description": "MIN(qty) должен быть > 0 (MIN)",
+  "field": "checkout.items[*].qty",
+  "operator": "greater_than",
+  "value": 0,
+  "aggregate": { "mode": "MIN", "onEmpty": "PASS" },
+  "level": "ERROR",
+  "code": "ERR_MIN_QTY_POSITIVE",
+  "message": "Минимальное количество товара должно быть больше 0",
+  "id": "wildcard_agg_demo.rule_min_qty_positive"
+}

@@ -1,0 +1,10 @@
+{
+  "type": "rule",
+  "role": "predicate",
+  "description": "Все qty > 0 (ALL)",
+  "field": "checkout.items[*].qty",
+  "operator": "greater_than",
+  "value": 0,
+  "aggregate": { "mode": "ALL", "onEmpty": "FALSE" },
+  "id": "wildcard_agg_demo.pred_all_qty_positive"
+}

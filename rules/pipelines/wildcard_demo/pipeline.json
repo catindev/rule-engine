@@ -1,9 +1,0 @@
-{
-  "type": "pipeline",
-  "description": "Demo: wildcard [*] для flat payload (items[N].qty)",
-  "strict": false,
-  "flow": [
-    { "rule": "rule_item_qty_positive" }
-  ],
-  "id": "wildcard_demo"
-}

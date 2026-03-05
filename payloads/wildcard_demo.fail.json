@@ -1,9 +1,0 @@
-{
-  "order.id": "A-101",
-  "items[0].sku": "APPLE",
-  "items[0].qty": 3,
-  "items[1].sku": "BANANA",
-  "items[1].qty": 0,
-  "items[2].sku": "CHERRY",
-  "items[2].qty": -5
-}

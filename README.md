@@ -60,14 +60,7 @@ curl -X POST http://localhost:3000/pipeline_main \
 }
 ```
 
-Wildcard `[*]` **поддержан в рантайме** как расширение flat-map:
-
-- допускается ровно один токен `[*]` в `field`
-- wildcard матчится по ключам вида `... [<число>] ...` (например `items[0].qty`)
-- для `check`-правил при `FAIL` создаются issue по каждому конкретному ключу (например `items[2].qty`)
-- для `predicate`-правил используется агрегация **ANY** (TRUE, если хотя бы один элемент TRUE)
-
-Demo: pipeline `wildcard_demo` + payloads `payloads/wildcard_demo.*.json`.
+> **wildcard `[*]` сейчас не поддержан** в рантайме (в `deepGet()` используется точное совпадение ключа).
 
 ## Структура `rules/` и области видимости
 
@@ -339,7 +332,7 @@ node -e "const path=require('path'); const {loadArtifactsFromDir}=require('./lib
 ## Важные ограничения прототипа
 
 - payload читается только в **flat-only** режиме (точное совпадение ключа)
-- wildcard реализован в рантайме (см. раздел про payload)
+- wildcard/массовые проверки по массивам не реализованы
 - справочники поддержаны только в статическом виде (`dictionary.type = static`)
 
 ## Версия

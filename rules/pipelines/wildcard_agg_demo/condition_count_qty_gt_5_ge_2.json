@@ -1,0 +1,9 @@
+{
+  "type": "condition",
+  "description": "Выполнить проверку MIN только если есть >=2 товаров с qty>5",
+  "when": "pred_count_qty_gt_5_ge_2",
+  "steps": [
+    { "rule": "rule_min_qty_positive" }
+  ],
+  "id": "wildcard_agg_demo.condition_count_qty_gt_5_ge_2"
+}

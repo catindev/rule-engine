@@ -1,0 +1,9 @@
+{
+  "type": "condition",
+  "description": "Выполнить доп.проверку только если все qty > 0",
+  "when": "pred_all_qty_positive",
+  "steps": [
+    { "rule": "rule_max_qty_le_100" }
+  ],
+  "id": "wildcard_agg_demo.condition_all_qty_positive"
+}

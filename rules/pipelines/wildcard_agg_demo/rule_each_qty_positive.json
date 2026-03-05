@@ -1,0 +1,12 @@
+{
+  "type": "rule",
+  "role": "check",
+  "description": "qty каждого товара должен быть > 0 (EACH: issue на каждый провал)",
+  "field": "checkout.items[*].qty",
+  "operator": "greater_than",
+  "value": 0,
+  "level": "ERROR",
+  "code": "ERR_ITEM_QTY_POSITIVE",
+  "message": "Количество товара должно быть больше 0",
+  "id": "wildcard_agg_demo.rule_each_qty_positive"
+}

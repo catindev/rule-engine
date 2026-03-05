@@ -1,0 +1,12 @@
+{
+  "type": "pipeline",
+  "description": "Демо: wildcard + агрегации (EACH/ALL/COUNT/MIN/MAX)",
+  "strict": false,
+  "flow": [
+    { "rule": "rule_each_qty_positive" },
+    { "condition": "condition_all_qty_positive" },
+    { "condition": "condition_count_qty_gt_5_ge_2" },
+    { "rule": "rule_min_qty_positive" }
+  ],
+  "id": "wildcard_agg_demo"
+}

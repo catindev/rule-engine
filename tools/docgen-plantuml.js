@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { assert, normalizeWhenExpr } = require('../lib/utils');
 const { resolveRef } = require('../lib/resolver');
+const { regexHint } = require('./regex-hints');
 
 /**
  * Auto-generates a single PlantUML diagram for the ENTRY pipeline.
@@ -101,7 +102,11 @@ function valueLabel(rule, compiled) {
   }
 
   if (op === 'matches_regex') {
-    return rule.value != null ? `regex: ${rule.value}` : '';
+    if (rule.value == null) return '';
+    const hint = regexHint(rule.value);
+    // если есть человекочитаемое описание — показываем его, regex убираем
+    // если нет — показываем сырой regex чтобы не потерять информацию
+    return hint ? hint : `regex: ${rule.value}`;
   }
 
   if (rule.value !== undefined) {
@@ -116,12 +121,13 @@ function valueLabel(rule, compiled) {
 function labelForRule(rule, compiled) {
   const isLib = String(rule.id || '').startsWith('library.');
   const val   = valueLabel(rule, compiled);
-  const technical = [
+  const coreParts = [
     rule.field    ? `поле: ${rule.field}`        : '',
     rule.operator ? `оператор: ${rule.operator}` : '',
     val,
-    isLib         ? 'из библиотеки'             : '',
   ].filter(Boolean);
+  // пустая строка перед 'library' отделяет техническую часть от метки источника
+  const technical = isLib ? [...coreParts, '', 'library'] : coreParts;
   return buildLabel([rule.description || rule.id, '', ...technical]);
 }
 

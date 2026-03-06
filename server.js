@@ -120,7 +120,7 @@ app.post("/v1/validate", (req, res) => {
  * Полученный текст можно вставить в https://www.plantuml.com/plantuml/uml/
  * или передать в CLI: cat diagram.puml | plantuml -pipe > diagram.png
  */
-app.get("/v1/plantuml/:pipelineId", (req, res) => {
+app.get("/v1/:pipelineId/:format", (req, res) => {
   const pipelineId = req.params.pipelineId;
 
   const artifact = compiled.registry.get(pipelineId);
@@ -131,16 +131,20 @@ app.get("/v1/plantuml/:pipelineId", (req, res) => {
     });
   }
 
-  try {
-    const puml = renderPipelinePuml(compiled, pipelineId);
-    res.set("Content-Type", "text/plain; charset=utf-8");
-    return res.send(puml);
-  } catch (err) {
-    return res.status(500).json({
-      error: true,
-      message: err?.message || String(err),
-      pipelineId,
-    });
+  if (req.params.format === "json") {
+    return res.status(200).json(artifact);
+  } else {
+    try {
+      const puml = renderPipelinePuml(compiled, pipelineId);
+      res.set("Content-Type", "text/plain; charset=utf-8");
+      return res.send(puml);
+    } catch (err) {
+      return res.status(500).json({
+        error: true,
+        message: err?.message || String(err),
+        pipelineId,
+      });
+    }
   }
 });
 

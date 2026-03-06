@@ -1,0 +1,12 @@
+{
+  "type": "rule",
+  "role": "check",
+  "description": "Сумма транзакции не должна превышать порог антифрод-контроля",
+  "field": "accounts[*].transactions[*].amount",
+  "operator": "less_than",
+  "value": 10000000,
+  "level": "WARNING",
+  "code": "WARN_TXN_AMOUNT_SUSPICIOUS",
+  "message": "Сумма транзакции превышает порог антифрод-контроля",
+  "id": "accounts_validation.checks.rule_txn_amount_not_suspicious"
+}

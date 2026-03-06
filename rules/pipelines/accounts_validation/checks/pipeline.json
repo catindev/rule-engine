@@ -1,0 +1,13 @@
+{
+  "type": "pipeline",
+  "description": "Проверки счетов и транзакций",
+  "strict": false,
+  "flow": [
+    { "rule": "rule_account_number" },
+    { "rule": "rule_account_currency" },
+    { "rule": "rule_txn_amount_positive" },
+    { "rule": "rule_txn_currency_allowed" },
+    { "rule": "rule_txn_amount_not_suspicious" }
+  ],
+  "id": "accounts_validation.checks"
+}

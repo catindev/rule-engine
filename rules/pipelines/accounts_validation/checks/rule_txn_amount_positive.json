@@ -1,0 +1,12 @@
+{
+  "type": "rule",
+  "role": "check",
+  "description": "Сумма каждой транзакции должна быть положительной",
+  "field": "accounts[*].transactions[*].amount",
+  "operator": "greater_than",
+  "value": 0,
+  "level": "ERROR",
+  "code": "ERR_TXN_AMOUNT_NOT_POSITIVE",
+  "message": "Сумма транзакции должна быть больше нуля",
+  "id": "accounts_validation.checks.rule_txn_amount_positive"
+}

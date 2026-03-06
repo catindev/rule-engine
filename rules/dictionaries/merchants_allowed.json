@@ -1,0 +1,6 @@
+{
+  "id": "merchants_allowed",
+  "type": "dictionary",
+  "description": "DEMO: белый список merchantId, которым разрешено вызывать API. Используется в правиле rule_merchant_allowed через $context.merchantId",
+  "entries": ["demo-merchant", "acme-corp", "rocket-work"]
+}

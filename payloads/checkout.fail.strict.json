@@ -1,23 +1,31 @@
 {
-  "order.id": "ORD-1002",
-  "order.amount": 99999.0,
-  "order.currency": "XYZ",
-  "order.country": "IR",
-  "order.isCrossBorder": true,
-  "order.promoCode": "PROMO-2026",
+  "context": {
+    "pipelineId": "checkout_main",
+    "merchantId": "demo-merchant",
+    "currentDate": "2026-03-06",
+    "rulesetVersion": "draft-1"
+  },
+  "payload": {
+    "order.id": "ORD-1002",
+    "order.amount": 99999.0,
+    "order.currency": "XYZ",
+    "order.country": "IR",
+    "order.isCrossBorder": true,
+    "order.promoCode": "PROMO-2026",
 
-  "customer.id": "C-999",
-  "customer.email": "",
+    "customer.id": "C-999",
+    "customer.email": "",
 
-  "card.pan": "4111111111111112",
-  "card.exp": "01/20",
-  "card.cvv": "",
+    "card.pan": "4111111111111112",
+    "card.exp": "01/20",
+    "card.cvv": "",
 
-  "risk.ip": "10.0.0.1",
-  "risk.deviceFingerprint": "",
-  "risk.geoCountry": "IR",
-  "risk.ordersLast10m": 15,
+    "risk.ip": "10.0.0.1",
+    "risk.deviceFingerprint": "",
+    "risk.geoCountry": "IR",
+    "risk.ordersLast10m": 15,
 
-  "threeDS.requested": true,
-  "threeDS.method": "3DS2"
+    "threeDS.requested": true,
+    "threeDS.method": "3DS2"
+  }
 }

@@ -4,6 +4,9 @@
   "strict": false,
   "flow": [
     {
+      "rule": "rule_merchant_allowed"
+    },
+    {
       "rule": "rule_order_id_required"
     },
     {

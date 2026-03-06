@@ -112,6 +112,6 @@ app.listen(PORT, () => {
   console.log(`[rules-engine] endpoint: POST /v1/validate`);
   console.log(`[rules-engine] rules dir: ${RULES_DIR}`);
   console.log(
-    `[rules-engine] trace: ${TRACE ? "on" : "off"} (set TRACE=1 to include trace)`
+    `[rules-engine] trace: ${TRACE ? "on" : "off"} (set TRACE=1 to include trace)`,
   );
 });

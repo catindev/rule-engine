@@ -5,6 +5,7 @@ const path = require("path");
 const { createEngine } = require("./lib");
 const { loadArtifactsFromDir } = require("./lib/loader-fs");
 const { Operators } = require("./lib/operators");
+const { renderPipelinePuml } = require("./tools/docgen-plantuml");
 
 // ---- config
 const PORT = Number(process.env.PORT || 3000);
@@ -98,6 +99,42 @@ app.post("/v1/validate", (req, res) => {
     }
 
     return res.json(response);
+  } catch (err) {
+    return res.status(500).json({
+      error: true,
+      message: err?.message || String(err),
+      pipelineId,
+    });
+  }
+});
+
+/**
+ * GET /v1/plantuml/:pipelineId
+ *
+ * Возвращает PlantUML-диаграмму для указанного пайплайна в виде plain text.
+ * Все вложенные пайплайны раскрываются inline.
+ *
+ * Пример:
+ *   curl http://localhost:3000/v1/plantuml/checkout_main
+ *
+ * Полученный текст можно вставить в https://www.plantuml.com/plantuml/uml/
+ * или передать в CLI: cat diagram.puml | plantuml -pipe > diagram.png
+ */
+app.get("/v1/plantuml/:pipelineId", (req, res) => {
+  const pipelineId = req.params.pipelineId;
+
+  const artifact = compiled.registry.get(pipelineId);
+  if (!artifact || artifact.type !== "pipeline") {
+    return res.status(404).json({
+      error: true,
+      message: `Pipeline not found: ${pipelineId}`,
+    });
+  }
+
+  try {
+    const puml = renderPipelinePuml(compiled, pipelineId);
+    res.set("Content-Type", "text/plain; charset=utf-8");
+    return res.send(puml);
   } catch (err) {
     return res.status(500).json({
       error: true,

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const { assert, normalizeWhenExpr } = require('./utils');
-const { resolveRef } = require('./resolver');
+const { assert, normalizeWhenExpr } = require('../lib/utils');
+const { resolveRef } = require('../lib/resolver');
 
 /**
  * Auto-generates a single PlantUML diagram for the ENTRY pipeline.
@@ -27,41 +27,132 @@ function nowStamp() {
   );
 }
 
-function escapePuml(s) {
+/**
+ * Экранирует текстовую часть для PlantUML: слэши, кавычки, переносы строк.
+ * НЕ трогает разделители \n — они добавляются уже после.
+ */
+function escapeText(s) {
   if (s == null) return '';
   return String(s)
     .replace(/\\/g, '\\\\')
     .replace(/\r\n|\r|\n/g, ' ')
     .replace(/\t/g, ' ')
-    .replace(/\"/g, '\\"');
+    .replace(/"/g, '\\"');
 }
 
-function labelForRule(rule) {
-  const desc = rule.description ? rule.description : rule.id;
-  const field = rule.field ? `field: ${rule.field}` : '';
-  const op = rule.operator ? `op: ${rule.operator}` : '';
-  return escapePuml([desc, field, op].filter(Boolean).join(' | '));
+/**
+ * Собирает многострочный label из частей.
+ * Каждая непустая часть экранируется отдельно и соединяется через \n.
+ * Пустая строка '' — явный разделитель (пустая строка в выводе).
+ * Несколько подряд идущих пустых строк схлопываются в одну.
+ * Пустые строки в начале и конце обрезаются.
+ */
+function buildLabel(parts) {
+  const escaped = parts
+    .filter((p) => p !== null && p !== undefined)
+    .map((p) => (p === '' ? '' : escapeText(p)));
+
+  // схлопываем соседние пустые строки
+  const collapsed = escaped.filter((p, i) => !(p === '' && escaped[i - 1] === ''));
+
+  // обрезаем пустые с краёв
+  let start = 0;
+  let end = collapsed.length - 1;
+  while (start <= end && collapsed[start] === '') start++;
+  while (end >= start && collapsed[end] === '') end--;
+
+  return collapsed.slice(start, end + 1).join('\\n');
 }
 
-function labelForPredicate(rule) {
-  const desc = rule.description ? rule.description : rule.id;
-  const field = rule.field ? `field: ${rule.field}` : '';
-  const op = rule.operator ? `op: ${rule.operator}` : '';
-  return escapePuml(['PRED', desc, field, op].filter(Boolean).join(' | '));
+// ---------- value rendering ----------
+
+/**
+ * Возвращает строку с информацией о сравниваемом значении/словаре/поле.
+ */
+function valueLabel(rule, compiled) {
+  const op = rule.operator;
+
+  if (
+    op === 'field_equals_field' ||
+    op === 'field_not_equals_field' ||
+    op === 'field_less_than_field' ||
+    op === 'field_greater_than_field'
+  ) {
+    return rule.value_field ? `сравнить с полем: ${rule.value_field}` : '';
+  }
+
+  if (op === 'in_dictionary') {
+    const dictId = rule.dictionary && rule.dictionary.id;
+    if (!dictId) return '';
+    const dict = compiled.dictionaries.get(dictId);
+    if (!dict) return `словарь: ${dictId}`;
+    const entries = Array.isArray(dict.entries) ? dict.entries : [];
+    const labels = entries.map((e) =>
+      typeof e === 'string' ? e : (e.code || e.value || JSON.stringify(e))
+    );
+    if (labels.length === 0) return `словарь: ${dictId}`;
+    if (labels.length <= 6) return `словарь: ${dictId} [${labels.join(', ')}]`;
+    return `словарь: ${dictId} [${labels.slice(0, 5).join(', ')} …+${labels.length - 5}]`;
+  }
+
+  if (op === 'any_filled') {
+    const paths = Array.isArray(rule.paths) ? rule.paths : [];
+    return paths.length > 0 ? `любое из: [${paths.join(', ')}]` : '';
+  }
+
+  if (op === 'matches_regex') {
+    return rule.value != null ? `regex: ${rule.value}` : '';
+  }
+
+  if (rule.value !== undefined) {
+    return `значение: ${rule.value}`;
+  }
+
+  return '';
 }
 
+// ---------- label builders ----------
+
+function labelForRule(rule, compiled) {
+  const isLib = String(rule.id || '').startsWith('library.');
+  const val   = valueLabel(rule, compiled);
+  const technical = [
+    rule.field    ? `поле: ${rule.field}`        : '',
+    rule.operator ? `оператор: ${rule.operator}` : '',
+    val,
+    isLib         ? 'из библиотеки'             : '',
+  ].filter(Boolean);
+  return buildLabel([rule.description || rule.id, '', ...technical]);
+}
+
+function labelForPredicate(rule, compiled) {
+  return buildLabel([
+    'PRED',
+    rule.description || rule.id,
+    rule.field    ? `поле: ${rule.field}`         : '',
+    rule.operator ? `оператор: ${rule.operator}`  : '',
+    valueLabel(rule, compiled),
+  ]);
+}
+
+/**
+ * Заголовок partition: сначала описание, потом id на новой строке.
+ * Кавычки для partition экранируем отдельно через escapeText.
+ */
 function pipelineTitle(pipeline) {
-  const id = pipeline.id;
-  const desc = pipeline.description ? ` — ${pipeline.description}` : '';
-  return escapePuml(`${id}${desc}`);
+  const desc = escapeText(pipeline.description || pipeline.id);
+  const id   = escapeText(pipeline.id);
+  return `${desc}\\nсценарий: ${id}`;
 }
 
 function severityStereo(level) {
-  if (level === 'ERROR') return '<<ERR>>';
-  if (level === 'WARNING') return '<<WARN>>';
+  if (level === 'ERROR')     return '<<ERR>>';
+  if (level === 'WARNING')   return '<<WARN>>';
   if (level === 'EXCEPTION') return '<<EXC>>';
   return '';
 }
+
+// ---------- rendering ----------
 
 function renderFlow(compiled, flow, lines, indent, scopePipelineId) {
   for (const step of flow) {
@@ -74,18 +165,17 @@ function renderStep(compiled, step, lines, indent, scopePipelineId) {
 
   if (step.rule) {
     const ruleId = resolveRef('rule', step.rule, scopePipelineId);
-    const rule = compiled.registry.get(ruleId);
+    const rule   = compiled.registry.get(ruleId);
     assert(rule, `Missing rule artifact: ${ruleId}`);
 
     if (rule.role === 'predicate') {
-      lines.push(`${pad}:${labelForPredicate(rule)} <<PRED>>;`);
+      lines.push(`${pad}:${labelForPredicate(rule, compiled)};<<PRED>>`);
       return;
     }
 
     const sev = severityStereo(rule.level);
-    const lib = String(rule.id || '').startsWith('library.') ? '<<LIB>>' : '';
-    const st = [sev, lib].filter(Boolean).join(' ');
-    lines.push(`${pad}:${labelForRule(rule)} ${st};`);
+    // stereotype в PlantUML ставится после закрывающей ;
+    lines.push(`${pad}:${labelForRule(rule, compiled)};${sev}`);
     return;
   }
 
@@ -109,33 +199,33 @@ function renderStep(compiled, step, lines, indent, scopePipelineId) {
     const c = compiled.registry.get(conditionId);
     assert(c && c.type === 'condition', `Missing condition artifact: ${conditionId}`);
 
-    const w = normalizeWhenExpr(c.when);
-    const whenMode = w.mode;
-    const preds = w.preds;
-    const predLabels = preds
+    const w          = normalizeWhenExpr(c.when);
+    const whenMode   = w.mode;
+    const predLabels = w.preds
       .map((ref) => {
         const predId = resolveRef('rule', ref, scopePipelineId);
         const pr = compiled.registry.get(predId);
-        return pr ? (pr.description || pr.id) : predId;
-      })
-      .map(escapePuml);
+        return escapeText(pr ? (pr.description || pr.id) : predId);
+      });
 
-    lines.push(
-      `${pad}if ("${escapePuml(c.id)} | whenMode: ${escapePuml(whenMode)} | when: ${escapePuml(predLabels.join(', '))}") then (true)`
-    );
+    const condDesc = escapeText(c.description || c.id);
+    const modeStr  = whenMode !== 'single' ? ` [${whenMode.toUpperCase()}]` : '';
+    const ifLabel  = `${condDesc}${modeStr}\\n${predLabels.join(', ')}`;
+
+    lines.push(`${pad}if ("${ifLabel}") then (да)`);
 
     renderFlow(compiled, c.steps || [], lines, indent + 1, scopePipelineId);
 
-    lines.push(pad + 'else (false)');
+    lines.push(`${pad}else (нет)`);
     if (Array.isArray(c.elseSteps) && c.elseSteps.length > 0) {
       renderFlow(compiled, c.elseSteps, lines, indent + 1, scopePipelineId);
     }
 
-    lines.push(pad + 'endif');
+    lines.push(`${pad}endif`);
     return;
   }
 
-  lines.push(`${pad}:UNKNOWN_STEP ${escapePuml(JSON.stringify(step))};`);
+  lines.push(`${pad}:UNKNOWN_STEP ${escapeText(JSON.stringify(step))};`);
 }
 
 function renderPipelinePuml(compiled, entryPipelineId) {
@@ -144,7 +234,9 @@ function renderPipelinePuml(compiled, entryPipelineId) {
 
   const lines = [];
   lines.push('@startuml');
-  lines.push(`title ${pipelineTitle(entry)}`);
+  const titleDesc = escapeText(entry.description || entry.id);
+  const titleId   = escapeText(entry.id);
+  lines.push(`title ${titleDesc}\\nСценарий ${titleId}`);
   lines.push('skinparam shadowing false');
   lines.push('skinparam roundcorner 14');
   lines.push('skinparam ActivityBorderColor #444444');
@@ -160,13 +252,9 @@ function renderPipelinePuml(compiled, entryPipelineId) {
   lines.push('skinparam ActivityFontStyle<<EXC>> bold');
   lines.push('skinparam ActivityBackgroundColor<<PRED>> #DDDDDD');
   lines.push('skinparam ActivityBorderColor<<PRED>> #777777');
-  lines.push('skinparam ActivityBackgroundColor<<LIB>> #C9F0EA');
-  lines.push('skinparam ActivityBorderColor<<LIB>> #0F6B62');
 
   lines.push('start');
-  lines.push(`partition "${pipelineTitle(entry)}" {`);
-  renderFlow(compiled, entry.flow || [], lines, 1, entry.id);
-  lines.push('}');
+  renderFlow(compiled, entry.flow || [], lines, 0, entry.id);
   lines.push('stop');
   lines.push('@enduml');
   return lines.join('\n');
@@ -180,11 +268,10 @@ function generatePumlForEntryPipeline(compiled, rulesDir, entryPipelineId) {
   const entry = compiled.registry.get(entryPipelineId);
   assert(entry && entry.type === 'pipeline', `Entry pipeline not found: ${entryPipelineId}`);
 
-  const stamp = nowStamp();
-  const puml = renderPipelinePuml(compiled, entryPipelineId);
-
-  const src = compiled.sources instanceof Map ? compiled.sources.get(entryPipelineId) : null;
-  const outDir = src && src.file ? path.dirname(src.file) : rulesDir;
+  const stamp   = nowStamp();
+  const puml    = renderPipelinePuml(compiled, entryPipelineId);
+  const src     = compiled.sources instanceof Map ? compiled.sources.get(entryPipelineId) : null;
+  const outDir  = src && src.file ? path.dirname(src.file) : rulesDir;
   const outPath = path.join(outDir, `${entryPipelineId}.${stamp}.puml`);
   fs.writeFileSync(outPath, puml, 'utf8');
   return { outPath };
@@ -192,4 +279,5 @@ function generatePumlForEntryPipeline(compiled, rulesDir, entryPipelineId) {
 
 module.exports = {
   generatePumlForEntryPipeline,
+  renderPipelinePuml,
 };

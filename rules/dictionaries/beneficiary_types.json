@@ -1,0 +1,11 @@
+{
+  "id": "beneficiary_types",
+  "type": "dictionary",
+  "description": "Разрешённые значения beneficiary.type",
+  "entries": [
+    "UL_RESIDENT",
+    "UL_NONRESIDENT",
+    "IP_RESIDENT",
+    "IP_NONRESIDENT"
+  ]
+}

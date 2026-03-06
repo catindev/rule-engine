@@ -1,0 +1,20 @@
+{
+  "id": "checkout_main.base_validate.rule_merchant_allowed",
+  "type": "rule",
+  "description": "Операции разрешены только для мерчантов из белого списка. Демо: только demo-merchant и acme-corp",
+  "role": "check",
+  "operator": "in_dictionary",
+  "field": "$context.merchantId",
+  "dictionary": {
+    "type": "static",
+    "id": "merchants_allowed"
+  },
+  "level": "EXCEPTION",
+  "code": "ERR_MERCHANT_NOT_ALLOWED",
+  "message": "Мерчант не авторизован для выполнения операций",
+  "meta": {
+    "why": "Пример использования $context — правило на конкретного мерчанта. Поле берётся не из payload, а из context запроса",
+    "bt": "DEMO: checkout/base",
+    "hint": "Передайте корректный merchantId в context"
+  }
+}

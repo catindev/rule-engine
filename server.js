@@ -8,29 +8,61 @@ const { Operators } = require("./lib/operators");
 const { renderPipelinePuml } = require("./tools/docgen-plantuml");
 
 // ---- config
-const PORT = Number(process.env.PORT || 3000);
-const RULES_DIR = process.env.RULES_DIR || path.join(__dirname, "rules");
-const TRACE = (process.env.TRACE || "0") === "1";
+const PORT          = Number(process.env.PORT || 3000);
+const SNAPSHOT_PATH = process.env.SNAPSHOT_PATH || null;
+const RULES_DIR     = process.env.RULES_DIR     || path.join(__dirname, "rules");
+const TRACE         = (process.env.TRACE || "0") === "1";
 
 // ---- bootstrap engine
+// Two modes:
+//   SNAPSHOT_PATH set → load pre-built snapshot (production)
+//   RULES_DIR (default) → walk filesystem and compile on start (development)
 function bootstrap() {
-  if (!fs.existsSync(RULES_DIR)) {
-    throw new Error(`RULES_DIR not found: ${RULES_DIR}`);
-  }
-  const { artifacts, sources } = loadArtifactsFromDir(RULES_DIR);
   const engine = createEngine({ operators: Operators });
-  const compiled = engine.compile(artifacts, { sources });
-  return { engine, compiled };
+
+  if (SNAPSHOT_PATH) {
+    // snapshot mode
+    if (!fs.existsSync(SNAPSHOT_PATH)) {
+      throw new Error(`SNAPSHOT_PATH not found: ${SNAPSHOT_PATH}`);
+    }
+    const snapshot = JSON.parse(fs.readFileSync(SNAPSHOT_PATH, "utf8"));
+    const { artifacts, version, createdAt, createdBy, description } = snapshot;
+
+    if (!Array.isArray(artifacts) || artifacts.length === 0) {
+      throw new Error(`Snapshot at ${SNAPSHOT_PATH} contains no artifacts`);
+    }
+
+    const compiled = engine.compile(artifacts);
+    console.log(`[engine] mode     : snapshot`);
+    console.log(`[engine] file     : ${SNAPSHOT_PATH}`);
+    console.log(`[engine] version  : ${version || "n/a"}`);
+    console.log(`[engine] created  : ${createdAt || "n/a"} by ${createdBy || "n/a"}`);
+    if (description) console.log(`[engine] desc     : ${description}`);
+    console.log(`[engine] artifacts: ${artifacts.length}`);
+    return { engine, compiled, meta: { mode: "snapshot", version, createdAt, createdBy, description } };
+
+  } else {
+    // fs mode (development)
+    if (!fs.existsSync(RULES_DIR)) {
+      throw new Error(`RULES_DIR not found: ${RULES_DIR}`);
+    }
+    const { artifacts, sources } = loadArtifactsFromDir(RULES_DIR);
+    const compiled = engine.compile(artifacts, { sources });
+    console.log(`[engine] mode     : fs`);
+    console.log(`[engine] rules dir: ${RULES_DIR}`);
+    console.log(`[engine] artifacts: ${artifacts.length}`);
+    return { engine, compiled, meta: { mode: "fs", rulesDir: RULES_DIR } };
+  }
 }
 
-const { engine, compiled } = bootstrap();
+const { engine, compiled, meta } = bootstrap();
 
 // ---- http app
 const app = express();
 app.use(express.json({ limit: "2mb" }));
 
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, rulesDir: RULES_DIR, compiled: true });
+  res.json({ ok: true, ...meta });
 });
 
 /**
@@ -115,12 +147,12 @@ app.post("/v1/validate", (req, res) => {
  * Все вложенные пайплайны раскрываются inline.
  *
  * Пример:
- *   curl http://localhost:3000/v1/plantuml/checkout_main
+ *   curl http://localhost:3000/v1/plantuml/beneficiary_ul_resident.full_validation
  *
  * Полученный текст можно вставить в https://www.plantuml.com/plantuml/uml/
  * или передать в CLI: cat diagram.puml | plantuml -pipe > diagram.png
  */
-app.get("/v1/:pipelineId/:format", (req, res) => {
+app.get("/v1/plantuml/*pipelineId", (req, res) => {
   const pipelineId = req.params.pipelineId;
 
   const artifact = compiled.registry.get(pipelineId);
@@ -131,20 +163,16 @@ app.get("/v1/:pipelineId/:format", (req, res) => {
     });
   }
 
-  if (req.params.format === "json") {
-    return res.status(200).json(artifact);
-  } else {
-    try {
-      const puml = renderPipelinePuml(compiled, pipelineId);
-      res.set("Content-Type", "text/plain; charset=utf-8");
-      return res.send(puml);
-    } catch (err) {
-      return res.status(500).json({
-        error: true,
-        message: err?.message || String(err),
-        pipelineId,
-      });
-    }
+  try {
+    const puml = renderPipelinePuml(compiled, pipelineId);
+    res.set("Content-Type", "text/plain; charset=utf-8");
+    return res.send(puml);
+  } catch (err) {
+    return res.status(500).json({
+      error: true,
+      message: err?.message || String(err),
+      pipelineId,
+    });
   }
 });
 
@@ -153,6 +181,6 @@ app.listen(PORT, () => {
   console.log(`[rules-engine] endpoint: POST /v1/validate`);
   console.log(`[rules-engine] rules dir: ${RULES_DIR}`);
   console.log(
-    `[rules-engine] trace: ${TRACE ? "on" : "off"} (set TRACE=1 to include trace)`,
+    `[rules-engine] trace: ${TRACE ? "on" : "off"} (set TRACE=1 to include trace)`
   );
 });

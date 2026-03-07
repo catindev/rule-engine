@@ -1,0 +1,101 @@
+<%
+  var isLib   = rule.id.startsWith('library.');
+  var isCheck = rule.role === 'check';
+  var suf     = isLib ? '-library' : '';
+%>
+<%- include('_header', { title: rule.description || rule.id, isLibrary: isLib, icons }) %>
+
+<a class="back-link" href="javascript:history.back()">
+  <svg viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  Назад
+</a>
+
+<div class="hero">
+  <span class="hero-icon"><%- icons[isLib ? 'big-rule-library' : 'big-rule'] %></span>
+  <div class="hero-body">
+    <h1 class="hero-title"><%= rule.description || rule.id %></h1>
+    <div class="hero-sub"><strong>Правило:</strong> <%= rule.id %></div>
+  </div>
+</div>
+
+<ul class="props">
+  <li class="prop">
+    <span class="prop-icon"><%- icons[(isCheck ? 'check' : 'predicate') + '-icon' + suf] %></span>
+    <span class="prop-label">Роль:</span>
+    <span class="prop-value prop-value--plain"><%= isCheck ? 'проверка' : 'предикат' %></span>
+  </li>
+  <% if (rule.level) { %>
+  <li class="prop">
+    <span class="prop-icon"><%- icons['level-icon' + suf] %></span>
+    <span class="prop-label">Уровень эскалации:</span>
+    <span class="prop-value prop-value--plain"><%= rule.level %></span>
+  </li>
+  <% } %>
+  <% if (rule.field) { %>
+  <li class="prop">
+    <span class="prop-icon"><%- icons['field-icon' + suf] %></span>
+    <span class="prop-label">Поле:</span>
+    <span class="prop-value"><%= rule.field %></span>
+  </li>
+  <% } %>
+  <li class="prop">
+    <span class="prop-icon"><%- icons['operator-icon' + suf] %></span>
+    <span class="prop-label">Оператор:</span>
+    <span class="prop-value"><%= rule.operator %></span>
+  </li>
+  <% if (rule.value !== undefined) { %>
+  <li class="prop">
+    <span class="prop-icon"><%- icons['value-icon' + suf] %></span>
+    <span class="prop-label">Значение:</span>
+    <span class="prop-value"><%= JSON.stringify(rule.value) %></span>
+  </li>
+  <% } %>
+  <% if (rule.value_field) { %>
+  <li class="prop">
+    <span class="prop-icon"><%- icons['value-icon' + suf] %></span>
+    <span class="prop-label">Поле для сравнения:</span>
+    <span class="prop-value"><%= rule.value_field %></span>
+  </li>
+  <% } %>
+  <% if (rule.dictionary) { %>
+  <li class="prop">
+    <span class="prop-icon"><%- icons['dictionary-icon' + suf] %></span>
+    <span class="prop-label">Справочник:</span>
+    <span class="prop-value">
+      <a href="/dictionaries/<%= encodeURIComponent(rule.dictionary.id) %>" style="text-decoration:underline"><%= rule.dictionary.id %></a>
+    </span>
+  </li>
+  <% } %>
+</ul>
+
+<% if (isCheck && (rule.message || rule.code)) { %>
+<p class="card-label">Формат ответа:</p>
+<div class="card">
+  <% if (rule.message) { %>
+  <div class="card-row">
+    <div class="card-row-label">Сообщение:</div>
+    <div class="card-row-value"><%= rule.message %></div>
+  </div>
+  <% } %>
+  <% if (rule.code) { %>
+  <div class="card-row">
+    <div class="card-row-label">Код:</div>
+    <div class="card-row-value card-row-value--mono"><%= rule.code %></div>
+  </div>
+  <% } %>
+</div>
+<% } %>
+
+<% if (rule.meta && Object.keys(rule.meta).length) { %>
+<p class="card-label">Мета-данные:</p>
+<div class="card">
+  <% Object.entries(rule.meta).forEach(function(entry) { %>
+  <div class="card-row">
+    <div class="card-row-label"><%= entry[0] %>:</div>
+    <div class="card-row-value"><%= entry[1] %></div>
+  </div>
+  <% }) %>
+</div>
+<% } %>
+
+<%- include('_footer') %>

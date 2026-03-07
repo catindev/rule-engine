@@ -1,0 +1,22 @@
+<%- include('_header', { title: 'Пайплайны', isLibrary: false, icons }) %>
+
+<div class="home-header">
+  <h1 class="home-title">Rule Engine</h1>
+</div>
+<p class="home-sub">Список корневых пайплайнов валидации</p>
+
+<div class="pipeline-grid">
+  <% pipelines.forEach(function(p) { %>
+  <a class="pipeline-card" href="/pipelines/<%= encodeURIComponent(p.id) %>">
+    <div class="pipeline-card-body">
+      <div class="pipeline-card-title"><%= p.description || p.id %></div>
+      <div class="pipeline-card-id"><%= p.id %></div>
+    </div>
+    <svg class="pipeline-card-arrow" viewBox="0 0 16 16" fill="none">
+      <path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </a>
+  <% }) %>
+</div>
+
+<%- include('_footer') %>

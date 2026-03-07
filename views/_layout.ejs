@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> — Rule Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="page<%= isLibrary ? ' page--library' : '' %>">
+
+  <aside class="sidebar">
+    <a href="/" title="На главную">
+      <%- icons['big-logotype'] %>
+    </a>
+  </aside>
+
+  <main class="main">
+    <%- content %>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

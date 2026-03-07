@@ -1,0 +1,29 @@
+<%- include('_header', { title: dictionary.description || dictionary.id, isLibrary: true, icons }) %>
+
+<a class="back-link" href="javascript:history.back()">
+  <svg viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  Назад
+</a>
+
+<div class="hero">
+  <span class="hero-icon"><%- icons['big-dictionary'] %></span>
+  <div class="hero-body">
+    <h1 class="hero-title"><%= dictionary.description || dictionary.id %></h1>
+    <div class="hero-sub"><strong>Справочник:</strong> <%= dictionary.id %></div>
+  </div>
+</div>
+
+<p class="card-label">Значения:</p>
+<div class="dict-entries">
+  <% if (!dictionary.entries || dictionary.entries.length === 0) { %>
+    <div class="dict-entry" style="color:var(--text-muted)">—</div>
+  <% } else { %>
+    <% dictionary.entries.forEach(function(e) {
+      var val = typeof e === 'object' ? (e.code || e.value || JSON.stringify(e)) : String(e);
+    %>
+    <div class="dict-entry"><%= val %></div>
+    <% }) %>
+  <% } %>
+</div>
+
+<%- include('_footer') %>

@@ -1,0 +1,12 @@
+{
+  "type": "rule",
+  "role": "check",
+  "description": "Валюта счёта должна быть разрешённой",
+  "field": "accounts[*].currency",
+  "operator": "in_dictionary",
+  "dictionary": { "type": "static", "id": "allowed_currencies" },
+  "level": "ERROR",
+  "code": "ERR_ACCOUNT_CURRENCY_INVALID",
+  "message": "Валюта счёта не входит в список разрешённых",
+  "id": "accounts_validation.checks.rule_account_currency"
+}

@@ -1,0 +1,12 @@
+{
+  "type": "rule",
+  "role": "check",
+  "description": "Валюта каждой транзакции должна быть разрешённой",
+  "field": "accounts[*].transactions[*].currency",
+  "operator": "in_dictionary",
+  "dictionary": { "type": "static", "id": "allowed_currencies" },
+  "level": "ERROR",
+  "code": "ERR_TXN_CURRENCY_INVALID",
+  "message": "Валюта транзакции не входит в список разрешённых",
+  "id": "accounts_validation.checks.rule_txn_currency_allowed"
+}

@@ -1,0 +1,6 @@
+{
+  "type": "dictionary",
+  "description": "Разрешённые валюты для счетов и транзакций",
+  "entries": ["RUB", "USD", "EUR", "CNY"],
+  "id": "allowed_currencies"
+}

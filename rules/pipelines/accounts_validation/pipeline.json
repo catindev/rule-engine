@@ -1,0 +1,9 @@
+{
+  "type": "pipeline",
+  "description": "Валидация счетов клиента и транзакций по ним",
+  "strict": false,
+  "flow": [
+    { "pipeline": "accounts_validation.checks" }
+  ],
+  "id": "accounts_validation"
+}

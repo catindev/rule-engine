@@ -1,0 +1,11 @@
+{
+  "type": "rule",
+  "role": "check",
+  "description": "Номер счёта обязателен",
+  "field": "accounts[*].number",
+  "operator": "not_empty",
+  "level": "ERROR",
+  "code": "ERR_ACCOUNT_NUMBER_REQUIRED",
+  "message": "Номер счёта не заполнен",
+  "id": "accounts_validation.checks.rule_account_number"
+}

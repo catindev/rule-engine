@@ -1,0 +1,53 @@
+<ul class="flow<%= nested ? ' flow--nested' : '' %>">
+  <% (steps || []).forEach(function(step) { %>
+
+    <% if (step.kind === 'pipeline') {
+      var sub      = compiled.registry.get(step.pipelineId);
+      var subLib   = step.pipelineId.startsWith('library.');
+      var subCmp   = compiled.pipelines && compiled.pipelines.get(step.pipelineId);
+      var subSteps = subCmp ? subCmp.steps : [];
+      var pipeIco  = subLib ? icons['pipeline-list-icon-library'] : icons['pipeline-list-icon'];
+    %>
+    <li class="flow-item">
+      <div class="flow-pipeline-header" data-accordion>
+        <span class="flow-pipeline-icon"><%- pipeIco %></span>
+        <span class="flow-pipeline-title">
+          <%= sub ? (sub.description || sub.id) : step.pipelineId %>
+          <% if (sub && sub.strict) { %><span class="flow-strict-badge">строгий</span><% } %>
+        </span>
+        <svg class="flow-pipeline-chevron" viewBox="0 0 16 16" fill="none">
+          <path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="flow-nested">
+        <%- include('_flow', { steps: subSteps, compiled: compiled, icons: icons, nested: true }) %>
+      </div>
+    </li>
+
+    <% } else if (step.kind === 'rule') {
+      var rule = compiled.registry.get(step.ruleId);
+      var rLib = step.ruleId.startsWith('library.');
+      var rIco = rLib ? icons['rule-list-icon-library'] : icons['rule-list-icon'];
+    %>
+    <li class="flow-item">
+      <a class="flow-leaf<%= rLib ? ' flow-leaf--library' : '' %>" href="/rules/<%= encodeURIComponent(step.ruleId) %>">
+        <span class="flow-leaf-icon"><%- rIco %></span>
+        <span class="flow-leaf-title"><%= rule ? (rule.description || rule.id) : step.ruleId %></span>
+      </a>
+    </li>
+
+    <% } else if (step.kind === 'condition') {
+      var cond = compiled.registry.get(step.conditionId);
+      var cLib = step.conditionId.startsWith('library.');
+      var cIco = cLib ? icons['condition-list-icon-library'] : icons['condition-list-icon'];
+    %>
+    <li class="flow-item">
+      <a class="flow-leaf<%= cLib ? ' flow-leaf--library' : '' %>" href="/conditions/<%= encodeURIComponent(step.conditionId) %>">
+        <span class="flow-leaf-icon"><%- cIco %></span>
+        <span class="flow-leaf-title"><%= cond ? (cond.description || cond.id) : step.conditionId %></span>
+      </a>
+    </li>
+
+    <% } %>
+  <% }) %>
+</ul>

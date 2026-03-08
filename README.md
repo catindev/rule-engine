@@ -11,7 +11,9 @@
 3. Исполняет выбранный pipeline для заданного payload
 4. Возвращает результат: `status`, `issues`, `trace`
 
-Движок **stateless** - один снэпшот пакета правил, один файл, нет БД. Это означает горизонтальное масштабирование без синхронизации состояния, простой rollback и canary-деплой через роутинг трафика между инстансами.
+Движок **stateless** — один снэпшот, один файл, нет БД. Это означает горизонтальное масштабирование без синхронизации состояния, простой rollback и canary-деплой через роутинг трафика между инстансами.
+
+---
 
 ## Быстрый старт
 
@@ -23,7 +25,9 @@ node server.js
 NODE_ENV=production SNAPSHOT_PATH=./snapshot.json node server.js
 ```
 
-Подробнее про режимы запуска и снэпшоты в разделе [Сборка и деплой](#сборка-и-деплой).
+Подробнее про режимы запуска и снэпшоты — в разделе [Сборка и деплой](#сборка-и-деплой).
+
+---
 
 ## HTTP API
 
@@ -45,9 +49,9 @@ NODE_ENV=production SNAPSHOT_PATH=./snapshot.json node server.js
 }
 ```
 
-- `context.pipelineId` обязателен, определяет какой пайплайн запускается
+- `context.pipelineId` — обязателен, определяет какой пайплайн запускается
 - остальные поля `context` произвольные, доступны в правилах через `$context.<key>`
-- `payload` вложенный JSON или flat-map, движок принимает оба формата
+- `payload` — вложенный JSON или flat-map, движок принимает оба формата
 
 **Ответ:**
 
@@ -67,13 +71,7 @@ NODE_ENV=production SNAPSHOT_PATH=./snapshot.json node server.js
 Возвращает текущий режим и мета-информацию:
 
 ```json
-{
-  "ok": true,
-  "mode": "production",
-  "version": "1.2.0",
-  "createdAt": "...",
-  "createdBy": "..."
-}
+{ "ok": true, "mode": "production", "version": "1.2.0", "createdAt": "...", "createdBy": "..." }
 ```
 
 В dev-режиме: `{ "ok": true, "mode": "development", "rulesDir": "..." }`
@@ -82,9 +80,11 @@ NODE_ENV=production SNAPSHOT_PATH=./snapshot.json node server.js
 
 Возвращает PlantUML-диаграмму пайплайна в виде plain text. Все вложенные пайплайны раскрываются inline.
 
+---
+
 ## Формат payload
 
-Движок принимает структурированный JSON (рекомендуется) и flat-map (для обратной совместимости). Перед проверкой payload по правилам JSON из него сконвертируется движком во flat-map.
+Движок принимает **вложенный JSON** (рекомендуется) и **flat-map** (для обратной совместимости). Перед прогоном правил вложенный JSON автоматически конвертируется в flat-map — клиент выбирает удобный формат.
 
 ```json
 { "order": { "id": "A100", "amount": 1200 } }
@@ -96,28 +96,28 @@ NODE_ENV=production SNAPSHOT_PATH=./snapshot.json node server.js
 { "order.id": "A100", "order.amount": 1200 }
 ```
 
-Подробнее в [docs/flat_payload_spec.md](./docs/flat_payload_spec.md).
+Подробнее — в [docs/flat_payload_spec.md](./docs/flat_payload_spec.md).
+
+---
 
 ## Wildcard и агрегации
 
 В поле правила можно использовать `[*]` для применения проверки ко всем элементам массива. Поддерживается **любое количество `[*]`** — в том числе вложенные массивы:
 
 ```json
-{
-  "field": "accounts[*].transactions[*].amount",
-  "operator": "greater_than",
-  "value": 0
-}
+{ "field": "accounts[*].transactions[*].amount", "operator": "greater_than", "value": 0 }
 ```
 
 Режимы агрегации: `EACH` (default), `ALL`, `COUNT`, `MIN`, `MAX`.
 
-Подробнее в [docs/wildcart.md](./docs/wildcart.md).
+Подробнее — в [docs/wildcart.md](./docs/wildcart.md).
+
+---
 
 ## Артефакты
 
-Подробная документация по написанию правил в [docs/how to rule.md](./docs/how%20to%20rule.md).  
-Структура папок и правила видимости в [docs/rules structure.md](./docs/rules%20structure.md).
+Подробная документация по написанию правил — в [docs/how to rule.md](./docs/how%20to%20rule.md).  
+Структура папок и правила видимости — в [docs/rules structure.md](./docs/rules%20structure.md).
 
 ### Rule
 
@@ -151,11 +151,13 @@ NODE_ENV=production SNAPSHOT_PATH=./snapshot.json node server.js
   "type": "condition",
   "description": "3DS-проверки только если threeDS.requested=true",
   "when": "pred_is_3ds_required",
-  "steps": [{ "rule": "rule_3ds_method_required" }]
+  "steps": [
+    { "rule": "rule_3ds_method_required" }
+  ]
 }
 ```
 
-`when` поддерживает: одиночный предикат и массив в формате `{ "all": [...] }`, `{ "any": [...] }`.
+`when` поддерживает: одиночный предикат, `{ "all": [...] }`, `{ "any": [...] }`.
 
 ### Pipeline
 
@@ -176,51 +178,59 @@ NODE_ENV=production SNAPSHOT_PATH=./snapshot.json node server.js
 }
 ```
 
+---
+
 ## Операторы
 
 ### check
 
-| Оператор                                                                                               | Параметры                | Описание                                               |
-| ------------------------------------------------------------------------------------------------------ | ------------------------ | ------------------------------------------------------ |
-| `not_empty`                                                                                            | —                        | поле заполнено                                         |
-| `is_empty`                                                                                             | —                        | поле пустое                                            |
-| `equals` / `not_equals`                                                                                | `value`                  | строгое равенство                                      |
-| `contains`                                                                                             | `value`                  | строка содержит подстроку                              |
-| `matches_regex`                                                                                        | `value`                  | соответствует regex                                    |
-| `greater_than` / `less_than`                                                                           | `value`                  | числа и даты `YYYY-MM-DD`                              |
-| `field_greater_than_field` / `field_less_than_field` / `field_equals_field` / `field_not_equals_field` | `value_field`            | сравнение двух полей payload                           |
-| `length_equals` / `length_max`                                                                         | `value`                  | длина строки                                           |
-| `in_dictionary`                                                                                        | `dictionary: {type, id}` | значение есть в справочнике                            |
-| `any_filled`                                                                                           | `paths[]`                | хотя бы одно из полей заполнено                        |
-| `valid_inn`                                                                                            | —                        | контрольный разряд ИНН (10 или 12 цифр)                |
-| `valid_ogrn`                                                                                           | —                        | контрольный разряд ОГРН (13 цифр) или ОГРНИП (15 цифр) |
+| Оператор | Параметры | Описание |
+|---|---|---|
+| `not_empty` | — | поле заполнено |
+| `is_empty` | — | поле пустое |
+| `equals` / `not_equals` | `value` | строгое равенство |
+| `contains` | `value` | строка содержит подстроку |
+| `matches_regex` | `value` | соответствует regex |
+| `greater_than` / `less_than` | `value` | числа и даты `YYYY-MM-DD` |
+| `field_greater_than_field` / `field_less_than_field` / `field_equals_field` / `field_not_equals_field` | `value_field` | сравнение двух полей payload |
+| `length_equals` / `length_max` | `value` | длина строки |
+| `in_dictionary` | `dictionary: {type, id}` | значение есть в справочнике |
+| `any_filled` | `paths[]` | хотя бы одно из полей заполнено |
+| `valid_inn` | — | контрольный разряд ИНН (10 или 12 цифр) |
+| `valid_ogrn` | — | контрольный разряд ОГРН (13 цифр) или ОГРНИП (15 цифр) |
 
 ### predicate
 
 Подмножество check-операторов без `valid_inn`, `valid_ogrn`, `any_filled`, `length_*`.
 
+---
+
 ## Уровни ошибок
 
-| level       | Поведение                                       |
-| ----------- | ----------------------------------------------- |
-| `WARNING`   | накапливается в issues, выполнение продолжается |
-| `ERROR`     | накапливается в issues, выполнение продолжается |
-| `EXCEPTION` | немедленно останавливает выполнение             |
+| level | Поведение |
+|---|---|
+| `WARNING` | накапливается в issues, выполнение продолжается |
+| `ERROR` | накапливается в issues, выполнение продолжается |
+| `EXCEPTION` | немедленно останавливает выполнение |
+
+---
 
 ## Результат выполнения
 
-| Поле      | Значения                       | Описание                          |
-| --------- | ------------------------------ | --------------------------------- |
-| `status`  | `OK` \| `EXCEPTION` \| `ABORT` | итог выполнения                   |
-| `control` | `CONTINUE` \| `STOP`           | внутренний сигнал                 |
-| `issues`  | array                          | найденные проблемы                |
-| `trace`   | array                          | трассировка (включить: `TRACE=1`) |
+| Поле | Значения | Описание |
+|---|---|---|
+| `status` | `OK` \| `EXCEPTION` \| `ABORT` | итог выполнения |
+| `control` | `CONTINUE` \| `STOP` | внутренний сигнал |
+| `issues` | array | найденные проблемы |
+| `trace` | array | трассировка (включить: `TRACE=1`) |
+
+---
 
 ## Сборка и деплой
 
 ### Снэпшот
 
-Снэпшот - единственный JSON-файл со всеми скомпилированными артефактами. Сервер в production или test окружении загрузит его при старте. Компиляция происходит при сборке, на сервер попадают только валидные правила.
+Снэпшот — единственный JSON-файл со всеми скомпилированными артефактами. Сервер в production/test загружает его при старте. **Компиляция происходит при сборке** — на сервер попадают только валидные правила.
 
 ```bash
 node tools/build-snapshot.js \
@@ -230,7 +240,7 @@ node tools/build-snapshot.js \
   --pretty
 ```
 
-Если правила содержат ошибки, то снэпшот не создаётся и выводится полный список всех проблем собранных за один прогон:
+Если правила содержат ошибки — снэпшот не создаётся, выводится **полный список всех проблем** за один прогон:
 
 ```
 [build-snapshot] COMPILATION ERROR — snapshot NOT saved
@@ -244,10 +254,10 @@ node tools/build-snapshot.js \
 
 Режим определяется через `NODE_ENV`:
 
-| NODE_ENV                | Источник правил | Поведение при старте                       |
-| ----------------------- | --------------- | ------------------------------------------ |
-| `development` (default) | `./rules` (fs)  | сканирует папку, запускает hot-reload      |
-| `production` / `test`   | `SNAPSHOT_PATH` | грузит снэпшот, без `SNAPSHOT_PATH` падает |
+| NODE_ENV | Источник правил | Поведение при старте |
+|---|---|---|
+| `development` (default) | `./rules` (fs) | сканирует папку, запускает hot-reload |
+| `production` / `test` | `SNAPSHOT_PATH` | грузит снэпшот, без `SNAPSHOT_PATH` — падает |
 
 ```bash
 # development
@@ -270,11 +280,11 @@ NODE_ENV=test SNAPSHOT_PATH=./snapshots/v2.json PORT=3001 node server.js
 [hot-reload] OK — 52 artifacts loaded
 ```
 
-Если новые правила не компилируются, то сервер продолжит работать со старой версией и выводит все ошибки в консоль.
+Если новые правила не компилируются — сервер продолжает работать со старой версией и выводит все ошибки в консоль.
 
 ### Canary и версионирование
 
-Движок stateless, каждый инстанс несёт один снэпшот. Для canary достаточно поднять отдельный инстанс с новым снэпшотом и переключить на него часть трафика на уровне роутера. Rollback — вернуть предыдущий снэпшот.
+Движок stateless — каждый инстанс несёт один снэпшот. Для canary достаточно поднять отдельный инстанс с новым снэпшотом и переключить на него часть трафика на уровне роутера. Rollback — вернуть предыдущий снэпшот.
 
 ```
 клиент ──┬── 90% ──→ instance-v1 (stable)
@@ -286,17 +296,17 @@ NODE_ENV=test SNAPSHOT_PATH=./snapshots/v2.json PORT=3001 node server.js
 ## Использование как библиотека
 
 ```js
-const { createEngine } = require("./lib");
+const { createEngine }         = require("./lib");
 const { loadArtifactsFromDir } = require("./lib/loader-fs");
-const { Operators } = require("./lib/operators");
+const { Operators }            = require("./lib/operators");
 
 const { artifacts, sources } = loadArtifactsFromDir("./rules");
-const engine = createEngine({ operators: Operators });
+const engine   = createEngine({ operators: Operators });
 const compiled = engine.compile(artifacts, { sources });
 
 const result = engine.runPipeline(compiled, "checkout_main", {
   ...payload,
-  __context: context, // зарезервированный ключ — контекст внутри движка
+  __context: context   // зарезервированный ключ — контекст внутри движка
 });
 ```
 
@@ -304,10 +314,10 @@ const result = engine.runPipeline(compiled, "checkout_main", {
 
 ## Документация
 
-| Документ                                                 | Описание                                                |
-| -------------------------------------------------------- | ------------------------------------------------------- |
-| [docs/how to rule.md](./docs/how%20to%20rule.md)         | Как писать правила: пошаговое руководство для аналитика |
-| [docs/rules structure.md](./docs/rules%20structure.md)   | Структура папок, правила видимости, формирование id     |
-| [docs/flat_payload_spec.md](./docs/flat_payload_spec.md) | Форматы входных данных: JSON и flat-map                 |
-| [docs/wildcart.md](./docs/wildcart.md)                   | Wildcard `[*]`, вложенные массивы, режимы агрегации     |
-| [docs/todo.md](./docs/todo.md)                           | План развития                                           |
+| Документ | Описание |
+|---|---|
+| [docs/how to rule.md](./docs/how%20to%20rule.md) | Как писать правила: пошаговое руководство для аналитика |
+| [docs/rules structure.md](./docs/rules%20structure.md) | Структура папок, правила видимости, формирование id |
+| [docs/flat_payload_spec.md](./docs/flat_payload_spec.md) | Форматы входных данных: JSON и flat-map |
+| [docs/wildcart.md](./docs/wildcart.md) | Wildcard `[*]`, вложенные массивы, режимы агрегации |
+| [docs/todo.md](./docs/todo.md) | План развития |

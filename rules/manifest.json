@@ -1,0 +1,110 @@
+{
+  "name": "Пример пакета правил",
+  "description": "В этом пакете собраны примеры сценариев для демонстрации возможностей движка",
+  "operators": {
+    "not_empty": {
+      "description": "не пустой"
+    },
+    "equals": {
+      "description": "равен"
+    },
+    "greater_than": {
+      "description": "больше чем"
+    },
+    "less_than": {
+      "description": "меньше чем"
+    },
+    "in_dictionary": {
+      "description": "входит в список"
+    },
+    "matches_regex": {
+      "description": "соответствует формату"
+    }
+  },
+  "fields": {
+    "order.id": {
+      "description": "идентификатор заказа",
+      "rootPipeline": "checkout_main"
+    },
+    "order.amount": {
+      "description": "сумма заказа",
+      "rootPipeline": "checkout_main"
+    },
+    "order.currency": {
+      "description": "валюта заказа",
+      "rootPipeline": "checkout_main"
+    },
+    "order.country": {
+      "description": "страна заказа",
+      "rootPipeline": "checkout_main"
+    },
+    "order.isCrossBorder": {
+      "description": "признак трансгран. платежа",
+      "rootPipeline": "checkout_main"
+    },
+    "customer.email": {
+      "description": "email клиента",
+      "rootPipeline": "checkout_main"
+    },
+    "card.pan": {
+      "description": "PAN карты",
+      "rootPipeline": "checkout_main"
+    },
+    "card.exp": {
+      "description": "срок действия карты",
+      "rootPipeline": "checkout_main"
+    },
+    "card.cvv": {
+      "description": "CVV карты",
+      "rootPipeline": "checkout_main"
+    },
+    "threeDS.requested": {
+      "description": "нужна проверка 3DS",
+      "rootPipeline": "checkout_main"
+    },
+    "threeDS.method": {
+      "description": "метод 3DS",
+      "rootPipeline": "checkout_main"
+    },
+    "risk.ip": {
+      "description": "IP-адрес",
+      "rootPipeline": "checkout_main"
+    },
+    "risk.deviceFingerprint": {
+      "description": "фингерпринт девайса",
+      "rootPipeline": "checkout_main"
+    },
+    "risk.geoCountry": {
+      "description": "страна по геоданным",
+      "rootPipeline": "checkout_main"
+    },
+    "risk.ordersLast10m": {
+      "description": "число заказов за последние 10 минут",
+      "rootPipeline": "checkout_main"
+    },
+    "$context.merchantId": {
+      "description": "идентификатор мерчанта",
+      "rootPipeline": "checkout_main"
+    },
+    "accounts[*].currency": {
+      "description": "валюта счёта",
+      "rootPipeline": "accounts_validation"
+    },
+    "accounts[*].number": {
+      "description": "номер счёта",
+      "rootPipeline": "accounts_validation"
+    },
+    "accounts[*].transactions[*].amount": {
+      "description": "сумма транзакции",
+      "rootPipeline": "accounts_validation"
+    },
+    "accounts[*].transactions[*].currency": {
+      "description": "валюта транзакции",
+      "rootPipeline": "accounts_validation"
+    },
+    "checkout.items[*].qty": {
+      "description": "количество единиц товара",
+      "rootPipeline": "wildcard_agg_demo"
+    }
+  }
+}

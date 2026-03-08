@@ -1,0 +1,21 @@
+<%- include('_header', { title: pipeline.description || pipeline.id, isLibrary: pipeline.id.startsWith('library.'), icons }) %>
+
+<a class="back-link" href="/">
+  <svg viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  Все сценарийы
+</a>
+
+<div class="hero">
+  <span class="hero-icon"><%- pipeline.id.startsWith('library.') ? icons['big-pipline-library'] : icons['big-pipline'] %></span>
+  <div class="hero-body">
+    <h1 class="hero-title"><%= pipeline.description || pipeline.id %></h1>
+    <div class="hero-sub">
+      <strong>Сценарий:</strong> <%= pipeline.id %>
+      <% if (pipeline.strict) { %><span class="badge badge--strict">строгий</span><% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('_flow', { steps: steps, compiled: compiled, icons: icons, nested: false }) %>
+
+<%- include('_footer') %>

@@ -49,9 +49,17 @@ for (const name of ICON_NAMES) {
   icons[name] = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
 }
 
-function render(res, view, locals) {
+// Манифест пакета правил — загружается при старте, перечитывается при hot-reload
+function loadManifest(rulesDir) {
+  const file = path.join(rulesDir || path.join(__dirname, 'rules'), 'manifest.json');
+  if (!fs.existsSync(file)) return {};
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')); }
+  catch(e) { console.warn('[docs] manifest parse error:', e.message); return {}; }
+}
+
+function render(res, view, locals, manifest) {
   const file = path.join(VIEWS_DIR, view + '.ejs');
-  ejs.renderFile(file, { ...locals, icons }, { views: VIEWS_DIR }, (err, html) => {
+  ejs.renderFile(file, { ...locals, icons, manifest: manifest || {} }, { views: VIEWS_DIR }, (err, html) => {
     if (err) {
       console.error('[docs] render error:', err.message);
       return res.status(500).send('<pre>' + err.message + '</pre>');
@@ -62,6 +70,16 @@ function render(res, view, locals) {
 }
 
 module.exports = function mountDocs(app, ctx) {
+  // Путь к rules/ — берём из ctx если есть, иначе рядом с docs-routes.js
+  const rulesDir = ctx.rulesDir || path.join(__dirname, 'rules');
+  let manifest = loadManifest(rulesDir);
+  console.log('[docs] manifest:', manifest.name ? `loaded "${manifest.name}"` : 'not found (using empty)');
+
+  // При hot-reload правил — перечитываем и манифест
+  if (ctx.on) {
+    ctx.on('reload', () => { manifest = loadManifest(rulesDir); });
+  }
+
   app.use('/static', express.static(STATIC_DIR));
 
   // Главная — только корневые пайплайны (id без точки)
@@ -71,7 +89,7 @@ module.exports = function mountDocs(app, ctx) {
       if (a.type === 'pipeline' && !id.includes('.')) pipelines.push(a);
     }
     pipelines.sort((a, b) => a.id.localeCompare(b.id));
-    render(res, 'home', { pipelines });
+    render(res, 'home', { pipelines }, manifest);
   });
 
   // Пайплайн
@@ -81,7 +99,7 @@ module.exports = function mountDocs(app, ctx) {
       return res.status(404).send('Pipeline not found: ' + req.params.id);
     const cmp   = ctx.compiled.pipelines && ctx.compiled.pipelines.get(a.id);
     const steps = cmp ? cmp.steps : [];
-    render(res, 'pipeline', { pipeline: a, steps, compiled: ctx.compiled });
+    render(res, 'pipeline', { pipeline: a, steps, compiled: ctx.compiled }, manifest);
   });
 
   // Правило
@@ -89,7 +107,7 @@ module.exports = function mountDocs(app, ctx) {
     const a = ctx.compiled.registry.get(req.params.id);
     if (!a || a.type !== 'rule')
       return res.status(404).send('Rule not found: ' + req.params.id);
-    render(res, 'rule', { rule: a });
+    render(res, 'rule', { rule: a }, manifest);
   });
 
   // Условие
@@ -97,7 +115,7 @@ module.exports = function mountDocs(app, ctx) {
     const a = ctx.compiled.registry.get(req.params.id);
     if (!a || a.type !== 'condition')
       return res.status(404).send('Condition not found: ' + req.params.id);
-    render(res, 'condition', { condition: a, compiled: ctx.compiled });
+    render(res, 'condition', { condition: a, compiled: ctx.compiled }, manifest);
   });
 
   // Справочник
@@ -105,7 +123,7 @@ module.exports = function mountDocs(app, ctx) {
     const a = ctx.compiled.registry.get(req.params.id);
     if (!a || a.type !== 'dictionary')
       return res.status(404).send('Dictionary not found: ' + req.params.id);
-    render(res, 'dictionary', { dictionary: a });
+    render(res, 'dictionary', { dictionary: a }, manifest);
   });
 
   console.log('[docs] UI available at http://localhost:' + (process.env.PORT || 3000) + '/');

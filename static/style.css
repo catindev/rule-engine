@@ -321,3 +321,80 @@ a { color: inherit; text-decoration: none; }
 
 /* ── Utilities ────────────────────────────────────────────────────────────── */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+/* ── Tabs ────────────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1.5px solid var(--border);
+  margin-bottom: 28px;
+}
+.tab-btn {
+  padding: 8px 20px;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1.5px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn--active {
+  color: var(--text);
+  border-bottom-color: var(--teal);
+  font-weight: 600;
+}
+.page--library .tab-btn--active { border-bottom-color: var(--purple); }
+
+.tab-pane { display: none; }
+.tab-pane--active { display: block; }
+
+/* ── Human-readable rule description ─────────────────────────────────────── */
+.human-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+.human-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+.human-kw   { color: var(--text-muted); }
+.human-field {
+  color: var(--teal);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.page--library .human-field { color: var(--purple); }
+.human-op   { color: var(--text-muted); font-style: italic; }
+.human-val  { color: var(--text); font-family: var(--font-mono); font-weight: 600; }
+.human-ok   { color: var(--teal); font-family: var(--font-mono); font-weight: 700; }
+.human-err  { color: #c0392b;     font-family: var(--font-mono); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.human-msg  { color: var(--teal); font-weight: 600; }
+.human-code { color: var(--teal); font-family: var(--font-mono); font-weight: 700; }
+
+/* ── Home page description ───────────────────────────────────────────────── */
+.home-desc {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 20px;
+  max-width: 560px;
+}
+
+.human-dict {
+  color: var(--purple);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.human-dict:hover { opacity: 0.8; }

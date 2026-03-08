@@ -86,7 +86,7 @@ function bootstrap() {
     // Контейнер — мутабельная обёртка над compiled.
     // Все обработчики запросов читают из ctx.compiled.
     // Hot-reload меняет ctx.compiled не трогая обработчики.
-    const ctx = { compiled };
+    const ctx = { compiled, rulesDir: RULES_DIR };
     startHotReload(engine, RULES_DIR, ctx);
     return { engine, ctx, meta: { mode: "development", rulesDir: RULES_DIR } };
 

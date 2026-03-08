@@ -1,7 +1,7 @@
 {
   "id": "checkout_main",
   "type": "pipeline",
-  "description": "Checkout: общий пайплайн валидации запроса на оплату",
+  "description": "Checkout: общий пайплайн валидации заявки на оплату",
   "strict": false,
   "flow": [
     { "pipeline": "checkout_main.base_validate" },

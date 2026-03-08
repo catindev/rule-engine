@@ -1,16 +1,19 @@
-<%- include('_header', { title: 'Сценарии', isLibrary: false, icons }) %>
+<%- include('_header', { title: manifest.name || 'Сценарии', isLibrary: false, icons }) %>
 
 <div class="home-header">
-  <h1 class="home-title">Rule Engine</h1>
+  <h1 class="home-title"><%= manifest.name || 'Rule Engine' %></h1>
 </div>
-<p class="home-sub">Список корневых сценарийов валидации</p>
+<% if (manifest.description) { %>
+<p class="home-desc"><%= manifest.description %></p>
+<% } %>
+
+<p class="home-sub">Основные сценарии проверок:</p>
 
 <div class="pipeline-grid">
   <% pipelines.forEach(function(p) { %>
   <a class="pipeline-card" href="/pipelines/<%= encodeURIComponent(p.id) %>">
     <div class="pipeline-card-body">
       <div class="pipeline-card-title"><%= p.description || p.id %></div>
-      <div class="pipeline-card-id"><%= p.id %></div>
     </div>
     <svg class="pipeline-card-arrow" viewBox="0 0 16 16" fill="none">
       <path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>

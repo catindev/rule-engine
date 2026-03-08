@@ -2,6 +2,23 @@
   var isLib   = rule.id.startsWith('library.');
   var isCheck = rule.role === 'check';
   var suf     = isLib ? '-library' : '';
+
+  // ── Маппинг из манифеста ──────────────────────────────────────────────
+  var fieldDesc    = manifest.fields    && manifest.fields[rule.field];
+  var operatorDesc = manifest.operators && manifest.operators[rule.operator];
+
+  var fieldLabel    = fieldDesc    ? fieldDesc.description    : rule.field;
+  var operatorLabel = operatorDesc ? operatorDesc.description : rule.operator;
+
+  // ── Значение: для in_dictionary показываем название справочника ────────
+  var valueHtml = '';
+  if (rule.operator === 'in_dictionary' && rule.dictionary) {
+    var dictDesc = rule.dictionary.description || rule.dictionary.id;
+    valueHtml = '<a class="human-dict" href="/dictionaries/' + encodeURIComponent(rule.dictionary.id) + '">' + dictDesc + '</a>';
+  } else if (rule.value !== undefined) {
+    valueHtml = '<span class="human-val">' + JSON.stringify(rule.value) + '</span>';
+  }
+  // not_empty и аналогичные без value — valueHtml остаётся пустым
 %>
 <%- include('_header', { title: rule.description || rule.id, isLibrary: isLib, icons }) %>
 
@@ -18,84 +35,128 @@
   </div>
 </div>
 
-<ul class="props">
-  <li class="prop">
-    <span class="prop-icon"><%- icons[(isCheck ? 'check' : 'predicate') + '-icon' + suf] %></span>
-    <span class="prop-label">Роль:</span>
-    <span class="prop-value prop-value--plain"><%= isCheck ? 'проверка' : 'предикат' %></span>
-  </li>
-  <% if (rule.level) { %>
-  <li class="prop">
-    <span class="prop-icon"><%- icons['level-icon' + suf] %></span>
-    <span class="prop-label">Уровень эскалации:</span>
-    <span class="prop-value prop-value--plain"><%= rule.level %></span>
-  </li>
-  <% } %>
-  <% if (rule.field) { %>
-  <li class="prop">
-    <span class="prop-icon"><%- icons['field-icon' + suf] %></span>
-    <span class="prop-label">Поле:</span>
-    <span class="prop-value"><%= rule.field %></span>
-  </li>
-  <% } %>
-  <li class="prop">
-    <span class="prop-icon"><%- icons['operator-icon' + suf] %></span>
-    <span class="prop-label">Оператор:</span>
-    <span class="prop-value"><%= rule.operator %></span>
-  </li>
-  <% if (rule.value !== undefined) { %>
-  <li class="prop">
-    <span class="prop-icon"><%- icons['value-icon' + suf] %></span>
-    <span class="prop-label">Значение:</span>
-    <span class="prop-value"><%= JSON.stringify(rule.value) %></span>
-  </li>
-  <% } %>
-  <% if (rule.value_field) { %>
-  <li class="prop">
-    <span class="prop-icon"><%- icons['value-icon' + suf] %></span>
-    <span class="prop-label">Поле для сравнения:</span>
-    <span class="prop-value"><%= rule.value_field %></span>
-  </li>
-  <% } %>
-  <% if (rule.dictionary) { %>
-  <li class="prop">
-    <span class="prop-icon"><%- icons['dictionary-icon' + suf] %></span>
-    <span class="prop-label">Справочник:</span>
-    <span class="prop-value">
-      <a href="/dictionaries/<%= encodeURIComponent(rule.dictionary.id) %>" style="text-decoration:underline"><%= rule.dictionary.id %></a>
-    </span>
-  </li>
-  <% } %>
-</ul>
+<!-- Табы -->
+<div class="tabs">
+  <button class="tab-btn tab-btn--active" data-tab="human">Описание</button>
+  <button class="tab-btn" data-tab="struct">Структура</button>
+</div>
 
-<% if (isCheck && (rule.message || rule.code)) { %>
-<p class="card-label">Формат ответа:</p>
-<div class="card">
-  <% if (rule.message) { %>
-  <div class="card-row">
-    <div class="card-row-label">Сообщение:</div>
-    <div class="card-row-value"><%= rule.message %></div>
+<!-- Таб: Описание -->
+<div class="tab-pane tab-pane--active" id="tab-human">
+  <div class="human-desc">
+    <p class="human-line">
+      <span class="human-kw">Если параметр</span>
+      <span class="human-field"><%= fieldLabel %></span>
+      <span class="human-op"><%= operatorLabel %></span>
+      <%- valueHtml %>
+    </p>
+    <% if (isCheck) { %>
+    <p class="human-line">
+      <span class="human-kw">то вернуть</span>
+      <span class="human-ok">OK</span>
+    </p>
+    <p class="human-line">
+      <span class="human-kw">иначе вернуть</span>
+      <span class="human-err"><%= rule.level || 'ERROR' %></span>
+      <% if (rule.message) { %>
+        <span class="human-kw">с сообщением</span>
+        <span class="human-msg"><%= rule.message %></span>
+      <% } %>
+    </p>
+    <% if (rule.code) { %>
+    <p class="human-line">
+      <span class="human-kw">и кодом ошибки</span>
+      <span class="human-code"><%= rule.code %></span>
+    </p>
+    <% } %>
+    <% } else { %>
+    <p class="human-line">
+      <span class="human-kw">то вернуть</span>
+      <span class="human-ok">true</span>
+    </p>
+    <p class="human-line">
+      <span class="human-kw">иначе вернуть</span>
+      <span class="human-err">false</span>
+    </p>
+    <% } %>
+  </div>
+</div>
+
+<!-- Таб: Структура -->
+<div class="tab-pane" id="tab-struct">
+  <ul class="props">
+    <li class="prop">
+      <span class="prop-icon"><%- icons[(isCheck ? 'check' : 'predicate') + '-icon' + suf] %></span>
+      <span class="prop-label">Роль:</span>
+      <span class="prop-value prop-value--plain"><%= isCheck ? 'проверка' : 'предикат' %></span>
+    </li>
+    <% if (rule.level) { %>
+    <li class="prop">
+      <span class="prop-icon"><%- icons['level-icon' + suf] %></span>
+      <span class="prop-label">Уровень эскалации:</span>
+      <span class="prop-value prop-value--plain"><%= rule.level %></span>
+    </li>
+    <% } %>
+    <% if (rule.field) { %>
+    <li class="prop">
+      <span class="prop-icon"><%- icons['field-icon' + suf] %></span>
+      <span class="prop-label">Поле:</span>
+      <span class="prop-value"><%= rule.field %></span>
+    </li>
+    <% } %>
+    <li class="prop">
+      <span class="prop-icon"><%- icons['operator-icon' + suf] %></span>
+      <span class="prop-label">Оператор:</span>
+      <span class="prop-value"><%= rule.operator %></span>
+    </li>
+    <% if (rule.value !== undefined) { %>
+    <li class="prop">
+      <span class="prop-icon"><%- icons['value-icon' + suf] %></span>
+      <span class="prop-label">Значение:</span>
+      <span class="prop-value"><%= JSON.stringify(rule.value) %></span>
+    </li>
+    <% } %>
+    <% if (rule.value_field) { %>
+    <li class="prop">
+      <span class="prop-icon"><%- icons['value-icon' + suf] %></span>
+      <span class="prop-label">Поле для сравнения:</span>
+      <span class="prop-value"><%= rule.value_field %></span>
+    </li>
+    <% } %>
+    <% if (rule.dictionary) { %>
+    <li class="prop">
+      <span class="prop-icon"><%- icons['dictionary-icon' + suf] %></span>
+      <span class="prop-label">Справочник:</span>
+      <span class="prop-value">
+        <a href="/dictionaries/<%= encodeURIComponent(rule.dictionary.id) %>" style="text-decoration:underline"><%= rule.dictionary.id %></a>
+      </span>
+    </li>
+    <% } %>
+  </ul>
+
+  <% if (isCheck && (rule.message || rule.code)) { %>
+  <p class="card-label">Формат ответа:</p>
+  <div class="card">
+    <% if (rule.message) { %>
+    <div class="card-row"><div class="card-row-label">Сообщение:</div><div class="card-row-value"><%= rule.message %></div></div>
+    <% } %>
+    <% if (rule.code) { %>
+    <div class="card-row"><div class="card-row-label">Код:</div><div class="card-row-value card-row-value--mono"><%= rule.code %></div></div>
+    <% } %>
   </div>
   <% } %>
-  <% if (rule.code) { %>
-  <div class="card-row">
-    <div class="card-row-label">Код:</div>
-    <div class="card-row-value card-row-value--mono"><%= rule.code %></div>
+
+  <% if (rule.meta && Object.keys(rule.meta).length) { %>
+  <p class="card-label">Мета-данные:</p>
+  <div class="card">
+    <% Object.entries(rule.meta).forEach(function(entry) { %>
+    <div class="card-row">
+      <div class="card-row-label"><%= entry[0] %>:</div>
+      <div class="card-row-value"><%= entry[1] %></div>
+    </div>
+    <% }) %>
   </div>
   <% } %>
 </div>
-<% } %>
-
-<% if (rule.meta && Object.keys(rule.meta).length) { %>
-<p class="card-label">Мета-данные:</p>
-<div class="card">
-  <% Object.entries(rule.meta).forEach(function(entry) { %>
-  <div class="card-row">
-    <div class="card-row-label"><%= entry[0] %>:</div>
-    <div class="card-row-value"><%= entry[1] %></div>
-  </div>
-  <% }) %>
-</div>
-<% } %>
 
 <%- include('_footer') %>

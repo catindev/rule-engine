@@ -157,7 +157,7 @@ a { color: inherit; text-decoration: none; }
   transition: transform .2s;
   flex-shrink: 0;
 }
-.flow-item.is-open .flow-pipeline-chevron { transform: rotate(90deg); }
+.flow-item.is-open > .flow-pipeline-header > .flow-pipeline-chevron { transform: rotate(90deg); }
 
 .flow-strict-badge {
   font-size: .72rem;
@@ -173,7 +173,7 @@ a { color: inherit; text-decoration: none; }
   padding-left: 26px;
   margin: 4px 0 4px 8px;
 }
-.flow-item.is-open .flow-nested { display: block; }
+.flow-item.is-open > .flow-nested { display: block; }
 
 /* rule / condition rows */
 .flow-leaf {
@@ -197,9 +197,9 @@ a { color: inherit; text-decoration: none; }
 
 /* library items in flow */
 .flow-leaf--library .flow-leaf-title {
-  color: var(--purple);
+  color: var(--text);
 }
-.flow-leaf--library:hover .flow-leaf-title { color: var(--purple); text-decoration: underline; text-decoration-color: var(--purple); }
+.flow-leaf--library:hover .flow-leaf-title { color: var(--teal); text-decoration: underline; text-decoration-color: var(--teal); }
 
 /* nested pipeline flow-leaf — muted */
 .flow-nested .flow-leaf-title { color: var(--text-muted); border-color: var(--text-muted); }

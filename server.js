@@ -111,7 +111,7 @@ function bootstrap() {
       throw new Error(`[${NODE_ENV}] Failed to parse snapshot: ${e.message}`);
     }
 
-    const { artifacts, version, createdAt, createdBy, description } = snapshot;
+    const { artifacts, version, createdAt, createdBy, description, manifest: snapshotManifest } = snapshot;
 
     if (!Array.isArray(artifacts) || artifacts.length === 0) {
       throw new Error(`[${NODE_ENV}] Snapshot contains no artifacts: ${SNAPSHOT_PATH}`);
@@ -124,7 +124,7 @@ function bootstrap() {
     console.log(`[engine] created  : ${createdAt || "n/a"} by ${createdBy || "n/a"}`);
     if (description) console.log(`[engine] desc     : ${description}`);
     console.log(`[engine] artifacts: ${artifacts.length}`);
-    const ctx = { compiled };
+    const ctx = { compiled, manifest: snapshotManifest || {} };
     return { engine, ctx, meta: { mode: NODE_ENV, version, createdAt, createdBy, description } };
   }
 }
@@ -189,7 +189,9 @@ app.post("/v1/validate", (req, res) => {
 
 
 // ── Documentation UI (dev-mode only) ─────────────────────────────────────
-if (IS_DEV) mountDocs(app, ctx);
+// Документация: в dev всегда, в prod — если DOCS_ENABLED=true
+const DOCS_ENABLED = IS_DEV || process.env.DOCS_ENABLED === 'true';
+if (DOCS_ENABLED) mountDocs(app, ctx);
 
 app.listen(PORT, () => {
   console.log(`[rules-engine] listening on http://localhost:${PORT}`);

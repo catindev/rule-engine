@@ -381,6 +381,9 @@ a { color: inherit; text-decoration: none; }
 .human-err  { color: #c0392b;     font-family: var(--font-mono); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 .human-msg  { color: var(--teal); font-weight: 600; }
 .human-code { color: var(--teal); font-family: var(--font-mono); font-weight: 700; }
+.page--library .human-msg  { color: var(--purple); }
+.page--library .human-code { color: var(--purple); }
+.page--library .human-ok   { color: var(--purple); }
 
 /* ── Home page description ───────────────────────────────────────────────── */
 .home-desc {
@@ -398,3 +401,11 @@ a { color: inherit; text-decoration: none; }
   text-underline-offset: 2px;
 }
 .human-dict:hover { opacity: 0.8; }
+
+/* context field badge */
+.human-context-badge {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-left: 2px;
+}

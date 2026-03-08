@@ -84,6 +84,20 @@ console.log(`[build-snapshot] author    : ${AUTHOR}`);
 if (DESCRIPTION) console.log(`[build-snapshot] description: ${DESCRIPTION}`);
 console.log('');
 
+// 1а. Загрузка манифеста пакета (опционально)
+const MANIFEST_PATH = path.join(RULES_DIR, 'manifest.json');
+let packageManifest = null;
+if (fs.existsSync(MANIFEST_PATH)) {
+  try {
+    packageManifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
+    console.log(`[build-snapshot] manifest: "${packageManifest.name || 'unnamed'}"`);
+  } catch (e) {
+    console.warn(`[build-snapshot] WARNING: manifest parse error: ${e.message}`);
+  }
+} else {
+  console.log(`[build-snapshot] manifest: not found (skipping)`);
+}
+
 // 1. Загрузка артефактов из файлов
 let artifacts;
 try {
@@ -114,6 +128,7 @@ const snapshot = {
   description: DESCRIPTION,
   rulesDir:    path.resolve(RULES_DIR),
   artifactCount: artifacts.length,
+  manifest:    packageManifest,
   artifacts,
 };
 

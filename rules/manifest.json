@@ -3,10 +3,10 @@
   "description": "В этом пакете собраны примеры сценариев для демонстрации возможностей движка",
   "operators": {
     "not_empty": {
-      "description": "не пустое"
+      "description": "не пустой"
     },
     "equals": {
-      "description": "равно"
+      "description": "равен"
     },
     "greater_than": {
       "description": "больше чем"
@@ -39,7 +39,7 @@
       "rootPipeline": "checkout_main"
     },
     "order.isCrossBorder": {
-      "description": "признак трансграничного платежа",
+      "description": "признак трансгран. платежа",
       "rootPipeline": "checkout_main"
     },
     "customer.email": {
@@ -47,7 +47,7 @@
       "rootPipeline": "checkout_main"
     },
     "card.pan": {
-      "description": "номер карты (PAN)",
+      "description": "PAN карты",
       "rootPipeline": "checkout_main"
     },
     "card.exp": {
@@ -71,7 +71,7 @@
       "rootPipeline": "checkout_main"
     },
     "risk.deviceFingerprint": {
-      "description": "device fingerprint",
+      "description": "фингерпринт девайса",
       "rootPipeline": "checkout_main"
     },
     "risk.geoCountry": {

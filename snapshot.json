@@ -1,11 +1,132 @@
 {
-  "version": "0.6.1",
-  "createdAt": "2026-03-06T20:58:26.433Z",
-  "createdBy": "analyst@bank.ru",
-  "description": "Тестовый снэпшот",
-  "rulesDir": "/home/claude/project/rules",
-  "artifactCount": 44,
+  "version": "0.8.0",
+  "createdAt": "2026-03-08T07:11:33.822Z",
+  "createdBy": "vladimirtitskiy",
+  "description": "",
+  "rulesDir": "/Users/vladimirtitskiy/Dev/rule-engine/rules",
+  "artifactCount": 52,
+  "manifest": {
+    "name": "Пример пакета правил",
+    "description": "В этом пакете собраны примеры сценариев для демонстрации возможностей движка",
+    "operators": {
+      "not_empty": {
+        "description": "не пустое"
+      },
+      "equals": {
+        "description": "равно"
+      },
+      "greater_than": {
+        "description": "больше чем"
+      },
+      "less_than": {
+        "description": "меньше чем"
+      },
+      "in_dictionary": {
+        "description": "входит в список"
+      },
+      "matches_regex": {
+        "description": "соответствует формату"
+      }
+    },
+    "fields": {
+      "order.id": {
+        "description": "идентификатор заказа",
+        "rootPipeline": "checkout_main"
+      },
+      "order.amount": {
+        "description": "сумма заказа",
+        "rootPipeline": "checkout_main"
+      },
+      "order.currency": {
+        "description": "валюта заказа",
+        "rootPipeline": "checkout_main"
+      },
+      "order.country": {
+        "description": "страна заказа",
+        "rootPipeline": "checkout_main"
+      },
+      "order.isCrossBorder": {
+        "description": "признак трансграничного платежа",
+        "rootPipeline": "checkout_main"
+      },
+      "customer.email": {
+        "description": "email клиента",
+        "rootPipeline": "checkout_main"
+      },
+      "card.pan": {
+        "description": "номер карты (PAN)",
+        "rootPipeline": "checkout_main"
+      },
+      "card.exp": {
+        "description": "срок действия карты",
+        "rootPipeline": "checkout_main"
+      },
+      "card.cvv": {
+        "description": "CVV карты",
+        "rootPipeline": "checkout_main"
+      },
+      "threeDS.requested": {
+        "description": "нужна проверка 3DS",
+        "rootPipeline": "checkout_main"
+      },
+      "threeDS.method": {
+        "description": "метод 3DS",
+        "rootPipeline": "checkout_main"
+      },
+      "risk.ip": {
+        "description": "IP-адрес",
+        "rootPipeline": "checkout_main"
+      },
+      "risk.deviceFingerprint": {
+        "description": "device fingerprint",
+        "rootPipeline": "checkout_main"
+      },
+      "risk.geoCountry": {
+        "description": "страна по геоданным",
+        "rootPipeline": "checkout_main"
+      },
+      "risk.ordersLast10m": {
+        "description": "число заказов за последние 10 минут",
+        "rootPipeline": "checkout_main"
+      },
+      "$context.merchantId": {
+        "description": "идентификатор мерчанта",
+        "rootPipeline": "checkout_main"
+      },
+      "accounts[*].currency": {
+        "description": "валюта счёта",
+        "rootPipeline": "accounts_validation"
+      },
+      "accounts[*].number": {
+        "description": "номер счёта",
+        "rootPipeline": "accounts_validation"
+      },
+      "accounts[*].transactions[*].amount": {
+        "description": "сумма транзакции",
+        "rootPipeline": "accounts_validation"
+      },
+      "accounts[*].transactions[*].currency": {
+        "description": "валюта транзакции",
+        "rootPipeline": "accounts_validation"
+      },
+      "checkout.items[*].qty": {
+        "description": "количество единиц товара",
+        "rootPipeline": "wildcard_agg_demo"
+      }
+    }
+  },
   "artifacts": [
+    {
+      "type": "dictionary",
+      "description": "Разрешённые валюты для счетов и транзакций",
+      "entries": [
+        "RUB",
+        "USD",
+        "EUR",
+        "CNY"
+      ],
+      "id": "allowed_currencies"
+    },
     {
       "id": "beneficiary_types",
       "type": "dictionary",
@@ -118,6 +239,105 @@
       },
       "role": "check",
       "id": "library.common.email_required"
+    },
+    {
+      "type": "pipeline",
+      "description": "Проверки счетов и транзакций",
+      "strict": false,
+      "flow": [
+        {
+          "rule": "rule_account_number"
+        },
+        {
+          "rule": "rule_account_currency"
+        },
+        {
+          "rule": "rule_txn_amount_positive"
+        },
+        {
+          "rule": "rule_txn_currency_allowed"
+        },
+        {
+          "rule": "rule_txn_amount_not_suspicious"
+        }
+      ],
+      "id": "accounts_validation.checks"
+    },
+    {
+      "type": "rule",
+      "role": "check",
+      "description": "Валюта счёта должна быть разрешённой",
+      "field": "accounts[*].currency",
+      "operator": "in_dictionary",
+      "dictionary": {
+        "type": "static",
+        "id": "allowed_currencies"
+      },
+      "level": "ERROR",
+      "code": "ERR_ACCOUNT_CURRENCY_INVALID",
+      "message": "Валюта счёта не входит в список разрешённых",
+      "id": "accounts_validation.checks.rule_account_currency"
+    },
+    {
+      "type": "rule",
+      "role": "check",
+      "description": "Номер счёта обязателен",
+      "field": "accounts[*].number",
+      "operator": "not_empty",
+      "level": "ERROR",
+      "code": "ERR_ACCOUNT_NUMBER_REQUIRED",
+      "message": "Номер счёта не заполнен",
+      "id": "accounts_validation.checks.rule_account_number"
+    },
+    {
+      "type": "rule",
+      "role": "check",
+      "description": "Сумма транзакции не должна превышать порог антифрод-контроля",
+      "field": "accounts[*].transactions[*].amount",
+      "operator": "less_than",
+      "value": 10000000,
+      "level": "WARNING",
+      "code": "WARN_TXN_AMOUNT_SUSPICIOUS",
+      "message": "Сумма транзакции превышает порог антифрод-контроля",
+      "id": "accounts_validation.checks.rule_txn_amount_not_suspicious"
+    },
+    {
+      "type": "rule",
+      "role": "check",
+      "description": "Сумма каждой транзакции должна быть положительной",
+      "field": "accounts[*].transactions[*].amount",
+      "operator": "greater_than",
+      "value": 0,
+      "level": "ERROR",
+      "code": "ERR_TXN_AMOUNT_NOT_POSITIVE",
+      "message": "Сумма транзакции должна быть больше нуля",
+      "id": "accounts_validation.checks.rule_txn_amount_positive"
+    },
+    {
+      "type": "rule",
+      "role": "check",
+      "description": "Валюта каждой транзакции должна быть разрешённой",
+      "field": "accounts[*].transactions[*].currency",
+      "operator": "in_dictionary",
+      "dictionary": {
+        "type": "static",
+        "id": "allowed_currencies"
+      },
+      "level": "ERROR",
+      "code": "ERR_TXN_CURRENCY_INVALID",
+      "message": "Валюта транзакции не входит в список разрешённых",
+      "id": "accounts_validation.checks.rule_txn_currency_allowed"
+    },
+    {
+      "type": "pipeline",
+      "description": "Валидация счетов клиента и транзакций по ним",
+      "strict": false,
+      "flow": [
+        {
+          "pipeline": "accounts_validation.checks"
+        }
+      ],
+      "id": "accounts_validation"
     },
     {
       "type": "pipeline",

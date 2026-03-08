@@ -8,6 +8,7 @@
   var operatorDesc = manifest.operators && manifest.operators[rule.operator];
 
   var fieldLabel    = fieldDesc    ? fieldDesc.description    : rule.field;
+  var isContext     = rule.field && rule.field.startsWith('$context.');
   var operatorLabel = operatorDesc ? operatorDesc.description : rule.operator;
 
   // ── Значение: для in_dictionary показываем название справочника ────────
@@ -46,7 +47,7 @@
   <div class="human-desc">
     <p class="human-line">
       <span class="human-kw">Если параметр</span>
-      <span class="human-field"><%= fieldLabel %></span>
+      <span class="human-field"><%= fieldLabel %></span><% if (isContext) { %><span class="human-context-badge">(параметр из контекста)</span><% } %>
       <span class="human-op"><%= operatorLabel %></span>
       <%- valueHtml %>
     </p>

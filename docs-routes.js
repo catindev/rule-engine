@@ -72,10 +72,10 @@ function render(res, view, locals, manifest) {
 module.exports = function mountDocs(app, ctx) {
   // Путь к rules/ — берём из ctx если есть, иначе рядом с docs-routes.js
   const rulesDir = ctx.rulesDir || path.join(__dirname, 'rules');
-  let manifest = loadManifest(rulesDir);
+  // dev: читаем с диска + hot-reload; prod: берём из ctx.manifest (встроен в снэпшот)
+  let manifest = ctx.manifest || loadManifest(rulesDir);
   console.log('[docs] manifest:', manifest.name ? `loaded "${manifest.name}"` : 'not found (using empty)');
 
-  // При hot-reload правил — перечитываем и манифест
   if (ctx.on) {
     ctx.on('reload', () => { manifest = loadManifest(rulesDir); });
   }
